@@ -226,12 +226,13 @@ body { font-family:'Pretendard',-apple-system,sans-serif; background:var(--bg); 
   border-bottom:1px solid var(--border); cursor:pointer;
 }
 .queue-item-header:hover { background:#f5f3ef; }
+.queue-item.selected > .queue-item-header { background:rgba(196,92,58,.05); border-left:3px solid var(--terra); }
 .queue-sender { font-size:13px; font-weight:700; color:var(--slate); }
 .queue-subject { font-size:12px; color:var(--text-s); margin-top:1px; }
 .queue-actions { margin-left:auto; display:flex; align-items:center; gap:6px; }
 .queue-toggle-icon { font-size:10px; color:var(--text-s); width:14px; text-align:center; }
 .queue-body { padding:16px 18px; display:none; }
-.queue-item.expanded .queue-body { display:block; }
+.queue-item.editing .queue-body { display:block; }
 .template-preview {
   background:#fff; border:1px solid var(--border); border-radius:6px;
   padding:18px 20px; margin-bottom:12px;
@@ -1382,7 +1383,6 @@ function renderReplyBody() {
           </div>
           <span class="badge ${TYPES[r.type]?.badge||'badge-other'}">${TYPES[r.type]?.label||'기타'}</span>
           <div class="queue-actions">
-            <span class="queue-toggle-icon">▼</span>
             <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();toggleEdit(${r.id})">내용 수정</button>
             <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();approveOne(${r.id})">발송 승인</button>
           </div>
@@ -1429,17 +1429,17 @@ function toggleDetailBody() {
 }
 
 function toggleQueue(id) {
-  const el = document.getElementById('qi-'+id);
-  if (!el) return;
-  el.classList.toggle('expanded');
-  const icon = el.querySelector('.queue-toggle-icon');
-  if (icon) icon.textContent = el.classList.contains('expanded') ? '▲' : '▼';
+  // 헤더 클릭 시 선택 하이라이트만 (본문은 내용 수정 버튼으로만 열림)
+  document.querySelectorAll('.queue-item').forEach(el => el.classList.remove('selected'));
+  document.getElementById('qi-'+id)?.classList.add('selected');
 }
 function toggleEdit(id) {
   const el = document.getElementById('qi-'+id);
   if (!el) return;
-  el.classList.add('expanded');
-  el.classList.toggle('editing');
+  const isEditing = el.classList.contains('editing');
+  // 다른 항목 닫기
+  document.querySelectorAll('.queue-item.editing').forEach(e => e.classList.remove('editing'));
+  if (!isEditing) el.classList.add('editing');
 }
 
 async function approveOne(id) {
