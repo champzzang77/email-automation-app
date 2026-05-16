@@ -1654,7 +1654,7 @@ function mapRawMail(raw, idx) {
     body:       raw.body      || '',
     type,
     confidence,
-    status:     (raw.isRead || autoArchived) ? '처리완료' : '미처리',
+    status:     raw.isReplied ? '답변완료' : (raw.isRead || autoArchived) ? '처리완료' : '미처리',
     time,
     rawDate,
     hasAttachment: raw.hasAttachment || false,
