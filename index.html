@@ -1292,8 +1292,17 @@ async function markReadInbox(id) {
     toast('✓ 실제 메일함에서 읽음 처리 완료');
     renderEmailList(); selectEmail(id); updateBadges();
   } catch (err) {
-    toast('❌ 읽음 처리 실패: ' + err.message);
-    if (btn) { btn.disabled = false; btn.textContent = '📨 실제 메일함 읽음처리'; }
+    // 메일이 삭제됐거나 존재하지 않는 경우 → 앱 내에서만 처리완료로 변경
+    const notFound = err.message && (err.message.includes('존재하지') || err.message.includes('삭제') || err.message.includes('취소'));
+    if (notFound) {
+      e.status = '처리완료';
+      saveStatusCache();
+      toast('⚠ 메일함에서 이미 삭제된 메일입니다. 앱에서 처리완료로 변경했습니다.');
+      renderEmailList(); selectEmail(id); updateBadges();
+    } else {
+      toast('❌ 읽음 처리 실패: ' + err.message);
+      if (btn) { btn.disabled = false; btn.textContent = '📨 실제 메일함 읽음처리'; }
+    }
   }
 }
 
