@@ -1080,7 +1080,7 @@ function renderInbox() {
   const dateFiltered = emails.filter(isInDateRange);
   document.getElementById('filter-tabs').innerHTML = FILTERS.map(f => {
     const count = f === '전체' ? dateFiltered.length
-      : f === '처리완료' ? dateFiltered.filter(e => e.status !== '미처리').length
+      : f === '처리완료' ? dateFiltered.filter(e => e.status === '처리완료' || e.status === '답변완료' || e.status === '답변 대기').length
       : dateFiltered.filter(e => e.type === FILTER_MAP[f]).length;
     return `<button class="filter-tab ${state.currentFilter===f?'active':''}" onclick="setFilter('${f}')">
       ${f} <span class="tab-count">${count}</span>
@@ -1122,7 +1122,7 @@ function renderEmailList() {
       </div>
       <div class="email-subject">${e.subject}</div>
       <div class="email-preview" style="display:flex;justify-content:space-between;align-items:center">
-        <span>${e.body.split('\n')[0]}</span>
+        <span>${(e.body||'').replace(/<[^>]*>/g,'').split('\n').find(l=>l.trim())||''}</span>
         ${e.status!=='미처리'?`<span class="badge ${e.status==='답변완료'?'badge-replied':'badge-done'}">${e.status}</span>`:''}
       </div>
     </div>`).join('');
@@ -1135,11 +1135,23 @@ function selectEmail(id) {
   renderEmailList();
 
   const confidenceColor = e.confidence >= 0.85 ? 'var(--green)' : e.confidence >= 0.7 ? 'var(--amber)' : 'var(--red)';
+  // 날짜 포맷: rawDate 우선, 없으면 time만 표시
+  const dateStr = e.rawDate
+    ? new Date(e.rawDate).toLocaleString('ko-KR', {year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'})
+    : e.time || '';
+
+  // 본문 XSS 방지: HTML 태그 이스케이프 후 줄바꿈만 <br>로 변환
+  const safeBody = (() => {
+    const isHtml = /<[a-z][\s\S]*>/i.test(e.body || '');
+    if (isHtml) return e.body; // HTML 메일은 그대로 렌더링
+    return (e.body || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  })();
+
   document.getElementById('email-detail').innerHTML = `
     <div class="detail-header">
       <div class="detail-subject">${e.subject}</div>
       <div class="detail-from">보낸 사람: <span>${e.sender}</span> &lt;${e.email}&gt;</div>
-      <div class="detail-date">수신 시간: 2026년 5월 15일 ${e.time}</div>
+      <div class="detail-date">수신 시간: ${dateStr}</div>
       <div class="type-select-wrap" style="margin-top:12px">
         <span class="type-select-label">분류 유형</span>
         <select class="type-select" onchange="changeType(${e.id}, this.value)">
@@ -1153,7 +1165,7 @@ function selectEmail(id) {
       </div>
     </div>
     <div class="detail-divider"></div>
-    <div class="detail-body">${e.body}</div>
+    <div class="detail-body">${safeBody}</div>
     <div class="detail-actions">
       ${e.status === '미처리' ? `
         <button class="btn btn-primary" onclick="sendToQueue(${e.id})">답변 대기열로 이동</button>
@@ -1162,6 +1174,7 @@ function selectEmail(id) {
       ` : `
         <span class="badge ${e.status==='답변완료'?'badge-replied':'badge-done'}" style="font-size:12px;padding:6px 12px">${e.status}</span>
         <button class="btn btn-ghost btn-sm" onclick="markReadInbox(${e.id})" id="markread-btn-${e.id}" style="margin-left:8px">📨 실제 메일함 읽음</button>
+        <button class="btn btn-ghost btn-sm" onclick="resetStatus(${e.id})" style="margin-left:8px">↩ 미처리로 되돌리기</button>
       `}
     </div>`;
 }
@@ -1169,6 +1182,17 @@ function selectEmail(id) {
 function changeType(id, newType) {
   const e = emails.find(x => x.id === id);
   if (e) { e.type = newType; toast('유형이 변경되었습니다: ' + TYPES[newType].label); renderEmailList(); }
+}
+
+function resetStatus(id) {
+  const e = emails.find(x => x.id === id);
+  if (!e) return;
+  e.status = '미처리';
+  // 대기열에서도 제거
+  replyQueue = replyQueue.filter(r => r.emailId !== id);
+  saveStatusCache(); saveReplyQueue();
+  toast('미처리 상태로 되돌렸습니다');
+  renderEmailList(); updateBadges(); selectEmail(id);
 }
 
 function sendToQueue(id) {
