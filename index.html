@@ -1121,9 +1121,9 @@ function renderEmailList() {
         <span class="email-time">${e.time}</span>
       </div>
       <div class="email-subject">${e.subject}</div>
-      <div class="email-preview" style="display:flex;justify-content:space-between;align-items:center">
-        <span>${(e.body||'').replace(/<[^>]*>/g,'').split('\n').find(l=>l.trim())||''}</span>
-        ${e.status!=='미처리'?`<span class="badge ${e.status==='답변완료'?'badge-replied':'badge-done'}">${e.status}</span>`:''}
+      <div class="email-preview" style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${(e.body||'').replace(/<[^>]*>/g,'').split('\n').find(l=>l.trim())||''}</span>
+        ${e.status!=='미처리'?`<span class="badge ${e.status==='답변완료'?'badge-replied':'badge-done'}" style="flex-shrink:0">${e.status}</span>`:''}
       </div>
     </div>`).join('');
 }
