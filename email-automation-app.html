@@ -667,7 +667,11 @@ body { font-family:'Pretendard',-apple-system,sans-serif; background:var(--bg); 
 // 상태 저장/복원 (localStorage)
 function saveStatusCache() {
   const cache = {};
-  emails.forEach(e => { if (e.status !== '미처리') cache[e.id] = e.status; });
+  emails.forEach(e => {
+    if (e.status !== '미처리' || e.inboxRead) {
+      cache[e.id] = { status: e.status, inboxRead: !!e.inboxRead };
+    }
+  });
   localStorage.setItem('mail-status-cache', JSON.stringify(cache));
 }
 
@@ -685,7 +689,11 @@ function loadMailData(data) {
   if (data.folderFull) { mailFolder = data.folderFull; mailSharedFlag = data.sharedFlag || 'user'; }
   const cache = loadStatusCache();
   emails     = raw.map(mapRawMail).map(e => {
-    if (cache[e.id]) e.status = cache[e.id];
+    const c = cache[e.id];
+    if (c) {
+      e.status    = typeof c === 'object' ? (c.status || e.status) : c;
+      e.inboxRead = typeof c === 'object' ? !!c.inboxRead : false;
+    }
     return e;
   });
   // 대기열: 새로 불러온 메일에 해당하는 항목만 유지
@@ -1125,7 +1133,10 @@ function renderEmailList() {
         <span class="email-sender">${e.sender} <span class="badge ${TYPES[e.type].badge}">${TYPES[e.type].label}</span></span>
         <span class="email-time">${e.time}</span>
       </div>
-      <div class="email-subject">${e.subject}</div>
+      <div class="email-subject" style="display:flex;align-items:center;gap:6px">
+        <span title="${e.inboxRead?'실제 메일함 읽음처리 완료':'읽음처리 전'}" style="font-size:15px;flex-shrink:0">${e.inboxRead?'📭':'📬'}</span>
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.subject}</span>
+      </div>
       <div class="email-preview" style="display:flex;justify-content:space-between;align-items:center;gap:6px">
         <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${(e.body||'').replace(/<[^>]*>/g,'').split('\n').find(l=>l.trim())||''}</span>
         ${e.status!=='미처리'?`<span class="badge ${e.status==='답변완료'?'badge-replied':'badge-done'}" style="flex-shrink:0">${e.status}</span>`:''}
@@ -1293,6 +1304,7 @@ async function markReadInbox(id) {
     const data = await res.json();
     if (!data.ok) throw new Error(data.error || '실패');
     e.status = '처리완료';
+    e.inboxRead = true;
     saveStatusCache();
     toast('✓ 실제 메일함에서 읽음 처리 완료');
     renderEmailList(); selectEmail(id); updateBadges();
