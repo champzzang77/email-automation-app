@@ -228,7 +228,8 @@ body { font-family:'Pretendard',-apple-system,sans-serif; background:var(--bg); 
 .queue-item-header:hover { background:#f5f3ef; }
 .queue-sender { font-size:13px; font-weight:700; color:var(--slate); }
 .queue-subject { font-size:12px; color:var(--text-s); margin-top:1px; }
-.queue-actions { margin-left:auto; display:flex; gap:6px; }
+.queue-actions { margin-left:auto; display:flex; align-items:center; gap:6px; }
+.queue-toggle-icon { font-size:10px; color:var(--text-s); width:14px; text-align:center; }
 .queue-body { padding:16px 18px; display:none; }
 .queue-item.expanded .queue-body { display:block; }
 .template-preview {
@@ -1181,7 +1182,11 @@ function selectEmail(id) {
       </div>
     </div>
     <div class="detail-divider"></div>
-    <div class="detail-body">${safeBody}</div>
+    <div class="detail-body-toggle" onclick="toggleDetailBody()" id="detail-body-toggle" style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 0;color:var(--text-m);font-size:12px;user-select:none">
+      <span id="detail-body-arrow" style="font-size:10px">▶</span>
+      <span>원본 메일 내용 보기</span>
+    </div>
+    <div class="detail-body" id="detail-body-content" style="display:none">${safeBody}</div>
     <div class="detail-actions">
       ${e.status === '미처리' ? `
         <button class="btn btn-primary" onclick="sendToQueue(${e.id})">답변 대기열로 이동</button>
@@ -1369,7 +1374,7 @@ function renderReplyBody() {
       return;
     }
     el.innerHTML = `<div class="queue-list">${replyQueue.map(r => `
-      <div class="queue-item expanded" id="qi-${r.id}">
+      <div class="queue-item" id="qi-${r.id}">
         <div class="queue-item-header" onclick="toggleQueue(${r.id})">
           <div>
             <div class="queue-sender">${r.to}</div>
@@ -1377,6 +1382,7 @@ function renderReplyBody() {
           </div>
           <span class="badge ${TYPES[r.type]?.badge||'badge-other'}">${TYPES[r.type]?.label||'기타'}</span>
           <div class="queue-actions">
+            <span class="queue-toggle-icon">▼</span>
             <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();toggleEdit(${r.id})">내용 수정</button>
             <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();approveOne(${r.id})">발송 승인</button>
           </div>
@@ -1411,8 +1417,23 @@ function renderReplyBody() {
   }
 }
 
+function toggleDetailBody() {
+  const content = document.getElementById('detail-body-content');
+  const arrow   = document.getElementById('detail-body-arrow');
+  const label   = arrow?.nextElementSibling;
+  if (!content) return;
+  const isOpen = content.style.display !== 'none';
+  content.style.display = isOpen ? 'none' : 'block';
+  if (arrow) arrow.textContent = isOpen ? '▶' : '▼';
+  if (label) label.textContent = isOpen ? '원본 메일 내용 보기' : '원본 메일 내용 접기';
+}
+
 function toggleQueue(id) {
-  document.getElementById('qi-'+id)?.classList.toggle('expanded');
+  const el = document.getElementById('qi-'+id);
+  if (!el) return;
+  el.classList.toggle('expanded');
+  const icon = el.querySelector('.queue-toggle-icon');
+  if (icon) icon.textContent = el.classList.contains('expanded') ? '▲' : '▼';
 }
 function toggleEdit(id) {
   const el = document.getElementById('qi-'+id);
