@@ -1170,10 +1170,10 @@ function selectEmail(id) {
       ${e.status === '미처리' ? `
         <button class="btn btn-primary" onclick="sendToQueue(${e.id})">답변 대기열로 이동</button>
         <button class="btn btn-ghost" onclick="markDone(${e.id})">처리 완료</button>
-        <button class="btn btn-ghost" onclick="markReadInbox(${e.id})" id="markread-btn-${e.id}">📨 실제 메일함 읽음</button>
+        <button class="btn btn-ghost" onclick="markReadInbox(${e.id})" id="markread-btn-${e.id}">📨 실제 메일함 읽음처리</button>
       ` : `
         <span class="badge ${e.status==='답변완료'?'badge-replied':'badge-done'}" style="font-size:12px;padding:6px 12px">${e.status}</span>
-        <button class="btn btn-ghost btn-sm" onclick="markReadInbox(${e.id})" id="markread-btn-${e.id}" style="margin-left:8px">📨 실제 메일함 읽음</button>
+        <button class="btn btn-ghost btn-sm" onclick="markReadInbox(${e.id})" id="markread-btn-${e.id}" style="margin-left:8px">📨 실제 메일함 읽음처리</button>
         <button class="btn btn-ghost btn-sm" onclick="resetStatus(${e.id})" style="margin-left:8px">↩ 미처리로 되돌리기</button>
       `}
     </div>`;
@@ -1293,7 +1293,7 @@ async function markReadInbox(id) {
     renderEmailList(); selectEmail(id); updateBadges();
   } catch (err) {
     toast('❌ 읽음 처리 실패: ' + err.message);
-    if (btn) { btn.disabled = false; btn.textContent = '📨 실제 메일함 읽음'; }
+    if (btn) { btn.disabled = false; btn.textContent = '📨 실제 메일함 읽음처리'; }
   }
 }
 
