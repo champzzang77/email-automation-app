@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD — 이메일 자동화 서비스</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --terra: #c45c3a; --terra-l: #d97550;
+  --slate: #1c1c22; --slate2: #26262e;
+  --text-s: #8a8780; --text-m: #a09d96;
+  --border: #e0ddd7; --bg: #f0ede8; --card: #faf9f7;
+  --green: #3a9e6a; --amber: #c48a2a; --red: #c43a3a;
+}
+body { font-family: 'Pretendard', -apple-system, sans-serif; background: var(--bg); color: #2a2825; font-size: 14px; line-height: 1.7; }
+.wrap { max-width: 860px; margin: 0 auto; padding: 48px 32px 80px; }
+
+/* HEADER */
+.doc-header { border-bottom: 3px solid var(--terra); padding-bottom: 28px; margin-bottom: 40px; }
+.doc-tag { font-size: 10px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--terra); margin-bottom: 10px; }
+.doc-title { font-size: 32px; font-weight: 900; color: var(--slate); line-height: 1.2; margin-bottom: 12px; letter-spacing: -.02em; }
+.doc-meta { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 16px; }
+.meta-item { font-size: 12px; color: var(--text-s); }
+.meta-item strong { color: var(--slate); font-weight: 700; }
+
+/* TOC */
+.toc { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 40px; }
+.toc-title { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--text-s); margin-bottom: 12px; }
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.toc-list li a { font-size: 13px; color: var(--slate); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+.toc-list li a:hover { color: var(--terra); }
+.toc-num { font-size: 11px; color: var(--text-s); min-width: 20px; }
+
+/* SECTION */
+.section { margin-bottom: 48px; }
+.section-num { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--terra); margin-bottom: 6px; }
+.section-title { font-size: 20px; font-weight: 800; color: var(--slate); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.section p { margin-bottom: 12px; color: #3a3835; }
+
+/* SUBSECTION */
+.sub { margin-bottom: 24px; }
+.sub-title { font-size: 14px; font-weight: 700; color: var(--slate); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.sub-title::before { content: ''; display: inline-block; width: 4px; height: 14px; background: var(--terra); border-radius: 2px; }
+
+/* TABLE */
+table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: 13px; }
+th { background: #f5f3ef; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-s); padding: 10px 14px; border-bottom: 2px solid var(--border); }
+td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: #3a3835; vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #f5f3ef; }
+
+/* BADGE */
+.badge { display: inline-flex; align-items: center; font-size: 10px; font-weight: 700; letter-spacing: .06em; padding: 2px 8px; border-radius: 4px; }
+.badge-done { background: rgba(58,158,106,.12); color: var(--green); }
+.badge-wip  { background: rgba(196,138,42,.12); color: var(--amber); }
+.badge-plan { background: var(--border); color: var(--text-s); }
+.badge-high { background: rgba(196,58,58,.12); color: var(--red); }
+.badge-mid  { background: rgba(196,138,42,.12); color: var(--amber); }
+.badge-low  { background: var(--border); color: var(--text-s); }
+
+/* CALLOUT */
+.callout { border-left: 3px solid var(--terra); background: rgba(196,92,58,.05); border-radius: 0 6px 6px 0; padding: 14px 18px; margin: 16px 0; font-size: 13px; color: #3a3835; }
+.callout.blue { border-color: #3a7ec4; background: rgba(58,126,196,.05); }
+.callout.green { border-color: var(--green); background: rgba(58,158,106,.05); }
+
+/* LIST */
+ul.feature-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+ul.feature-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: #3a3835; }
+ul.feature-list li::before { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+
+ul.plain { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+ul.plain li { font-size: 13px; color: #3a3835; }
+
+/* ARCH DIAGRAM */
+.arch { background: var(--slate2); border-radius: 10px; padding: 24px 28px; margin: 16px 0; font-family: monospace; font-size: 12px; color: #94a3b8; line-height: 2; }
+.arch .highlight { color: var(--terra-l); font-weight: 700; }
+.arch .dim { color: #4a4a5a; }
+
+/* STATUS CHIP */
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.chip { display: inline-flex; align-items: center; gap: 6px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 500; color: var(--slate); }
+.chip-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+/* FLOW */
+.flow { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin: 12px 0; }
+.flow-step { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 600; color: var(--slate); }
+.flow-arrow { color: var(--text-s); font-size: 14px; }
+
+/* VERSION */
+.version-row { display: flex; align-items: baseline; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.version-tag { font-size: 12px; font-weight: 700; color: var(--terra); min-width: 60px; }
+.version-date { font-size: 11px; color: var(--text-s); min-width: 80px; }
+.version-desc { font-size: 13px; color: #3a3835; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="doc-header">
+    <div class="doc-tag">Product Requirements Document</div>
+    <div class="doc-title">이메일 자동화 서비스<br>교육운영1팀</div>
+    <div class="doc-meta">
+      <div class="meta-item"><strong>작성자</strong> 박차민 (교육운영1팀)</div>
+      <div class="meta-item"><strong>최초 작성</strong> 2026년 5월</div>
+      <div class="meta-item"><strong>최종 수정</strong> 2026년 5월 20일</div>
+      <div class="meta-item"><strong>버전</strong> v1.3</div>
+      <div class="meta-item"><strong>상태</strong> <span class="badge badge-wip">개발 중</span></div>
+    </div>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc">
+    <div class="toc-title">목차</div>
+    <ul class="toc-list">
+      <li><a href="#s1"><span class="toc-num">01</span> 배경 및 목적</a></li>
+      <li><a href="#s2"><span class="toc-num">02</span> 대상 사용자</a></li>
+      <li><a href="#s3"><span class="toc-num">03</span> 시스템 구조</a></li>
+      <li><a href="#s4"><span class="toc-num">04</span> 핵심 기능 명세</a></li>
+      <li><a href="#s5"><span class="toc-num">05</span> 메일 처리 흐름</a></li>
+      <li><a href="#s6"><span class="toc-num">06</span> 비기능 요구사항</a></li>
+      <li><a href="#s7"><span class="toc-num">07</span> 제약사항 및 한계</a></li>
+      <li><a href="#s8"><span class="toc-num">08</span> 향후 로드맵</a></li>
+      <li><a href="#s9"><span class="toc-num">09</span> 변경 이력</a></li>
+    </ul>
+  </div>
+
+  <!-- 01 배경 및 목적 -->
+  <div class="section" id="s1">
+    <div class="section-num">01</div>
+    <div class="section-title">배경 및 목적</div>
+
+    <div class="sub">
+      <div class="sub-title">문제 상황</div>
+      <p>교육운영1팀은 매일 다수의 기업 HR 담당자로부터 교육 신청·변경·취소 메일을 수신합니다. 기존에는 담당자가 Hunet 사내 메일을 수동으로 열어 메일을 하나씩 확인하고, 유형을 판단한 뒤 수작업으로 답변을 작성하는 방식으로 업무를 처리했습니다.</p>
+      <p>이 과정에서 누락·지연이 발생하고, 반복적인 답변 작업에 불필요한 시간이 소요되는 문제가 있었습니다.</p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">목적</div>
+      <ul class="feature-list">
+        <li>Hunet 사내 메일을 자동으로 수집하여 대시보드에서 한눈에 관리</li>
+        <li>메일 유형(신청/변경/취소/기타)을 키워드 기반으로 자동 분류</li>
+        <li>분류 결과에 따라 맞춤 답변 템플릿 자동 생성 및 발송</li>
+        <li>처리 현황을 실시간 KPI로 시각화하여 업무 효율 측정</li>
+      </ul>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">기대 효과</div>
+      <table>
+        <tr><th>항목</th><th>기존</th><th>개선 후</th></tr>
+        <tr><td>메일 확인 방식</td><td>Hunet 메일함 수동 접속</td><td>대시보드 자동 수집</td></tr>
+        <tr><td>유형 분류</td><td>담당자 직접 판단</td><td>키워드 자동 분류 (목표 80%+)</td></tr>
+        <tr><td>답변 작성</td><td>매번 수작업</td><td>템플릿 자동 생성 후 검토·발송</td></tr>
+        <tr><td>처리 현황 파악</td><td>불가능</td><td>실시간 KPI 대시보드</td></tr>
+        <tr><td>읽음 처리</td><td>메일함 직접 접속</td><td>버튼 한 번으로 실제 메일함 읽음처리</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- 02 대상 사용자 -->
+  <div class="section" id="s2">
+    <div class="section-num">02</div>
+    <div class="section-title">대상 사용자</div>
+
+    <table>
+      <tr><th>구분</th><th>역할</th><th>주요 사용 기능</th></tr>
+      <tr>
+        <td><strong>박차민 (교육운영1팀)</strong></td>
+        <td>주 사용자 / 운영자</td>
+        <td>메일 수집, 분류, 답변 승인, 읽음처리, 설정 관리</td>
+      </tr>
+      <tr>
+        <td>교육운영1팀 팀원 <span class="badge badge-plan">예정</span></td>
+        <td>추후 확대 사용자</td>
+        <td>수신함 확인, 답변 승인</td>
+      </tr>
+    </table>
+
+    <div class="callout">
+      현재는 <strong>단일 사용자 구조</strong>로 운영됩니다. 박차민님의 Mac에서 로컬 서버가 실행되어야 메일 수집 및 읽음처리 기능이 동작합니다. 팀 공유는 사내 서버 배포 또는 Cloudflare Tunnel 설정 후 가능합니다.
+    </div>
+  </div>
+
+  <!-- 03 시스템 구조 -->
+  <div class="section" id="s3">
+    <div class="section-num">03</div>
+    <div class="section-title">시스템 구조</div>
+
+    <div class="sub">
+      <div class="sub-title">전체 아키텍처</div>
+      <div class="arch">
+<span class="highlight">[ 사용자 브라우저 ]</span>
+  GitHub Pages URL 접속
+  https://champzzang77.github.io/email-automation-app/
+        │
+        ▼
+<span class="highlight">[ email-automation-app.html ]</span>  ← 단일 HTML 앱 (UI 전체)
+  대시보드 / 수신함 / 답변관리 / 설정
+        │
+        │  HTTP API (localhost:3412)
+        ▼
+<span class="highlight">[ Node.js 로컬 서버 — server.js ]</span>  ← Mac에서 상시 실행
+  /api/fetch      → 메일 수집
+  /api/mark-read  → 읽음 처리
+  /api/send       → 메일 발송
+        │
+        ▼
+<span class="highlight">[ Playwright (Chromium) ]</span>
+  .profiles/hunet-mail/  ← 로그인된 Chrome 세션 재사용
+        │
+        ▼
+<span class="highlight">[ Hunet 사내 메일함 ]</span>
+  부서메일 > 교육운영1팀 > 박차민
+  https://hug.hunet.co.kr/app/mail
+      </div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">구성 파일</div>
+      <table>
+        <tr><th>파일</th><th>역할</th></tr>
+        <tr><td><code>email-automation-app.html</code></td><td>전체 UI 앱 (단일 HTML)</td></tr>
+        <tr><td><code>index.html</code></td><td>GitHub Pages 배포용 (앱과 동일)</td></tr>
+        <tr><td><code>server.js</code></td><td>로컬 API 서버 (포트 3412)</td></tr>
+        <tr><td><code>launch.js</code></td><td>Playwright 메일 수집 스크립트</td></tr>
+        <tr><td><code>scripts/hunet-session.js</code></td><td>Hunet 세션 싱글톤 (읽음처리·발송)</td></tr>
+        <tr><td><code>.profiles/hunet-mail/</code></td><td>Chrome 로그인 세션 저장 경로</td></tr>
+        <tr><td><code>~/Library/LaunchAgents/kr.hunet.email-automation.plist</code></td><td>Mac 부팅 시 서버 자동 시작</td></tr>
+      </table>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">데이터 저장 방식</div>
+      <table>
+        <tr><th>데이터</th><th>저장 위치</th><th>비고</th></tr>
+        <tr><td>메일 목록</td><td>메모리 (앱 실행 중)</td><td>새로고침 시 재수집 필요</td></tr>
+        <tr><td>처리 상태 (미처리/처리완료 등)</td><td>localStorage</td><td>브라우저에 영구 저장</td></tr>
+        <tr><td>읽음처리 여부 (inboxRead)</td><td>localStorage</td><td>봉투 아이콘으로 표시</td></tr>
+        <tr><td>답변 대기열</td><td>localStorage</td><td>새 메일 수집 시 동기화</td></tr>
+        <tr><td>발송 로그</td><td>localStorage</td><td>7일 보관</td></tr>
+        <tr><td>템플릿·서명·설정</td><td>localStorage</td><td>영구 저장</td></tr>
+        <tr><td>수집된 메일 원본</td><td>.mail-output/*.json</td><td>로컬 파일로 저장</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- 04 핵심 기능 명세 -->
+  <div class="section" id="s4">
+    <div class="section-num">04</div>
+    <div class="section-title">핵심 기능 명세</div>
+
+    <div class="sub">
+      <div class="sub-title">4-1. 메일 수집</div>
+      <ul class="feature-list">
+        <li>"메일 가져오기" 버튼 클릭 시 Playwright로 Hunet 부서메일함 자동 접속</li>
+        <li>대상 폴더: 부서메일(edulab, edu, aca) > 교육운영1팀(acaedu1, aca1) > 박차민</li>
+        <li>최대 200건(기본값) 수집, --limit 옵션으로 조정 가능</li>
+        <li>API 응답 캡처 방식 우선, 실패 시 DOM 파싱으로 fallback</li>
+        <li>페이지네이션 자동 처리 (80건/페이지 기준)</li>
+        <li>수집 결과를 .mail-output/*.json에 저장</li>
+        <li>JSON 파일 직접 불러오기(📂 JSON) 지원</li>
+      </ul>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">4-2. 자동 분류</div>
+      <ul class="feature-list">
+        <li>제목 + 본문 키워드 기반 유형 분류 (신뢰도 0~1 점수 산출)</li>
+        <li>분류 유형: 교육 신청 / 교육 변경 / 교육 취소 / 기타 / 검토 필요</li>
+        <li>신뢰도 70% 미만은 "검토 필요"로 자동 지정</li>
+        <li>수동으로 유형 변경 가능 (드롭다운)</li>
+        <li>설정 > 분류 규칙에서 키워드 추가/삭제 가능</li>
+        <li>Claude AI API 키 입력 시 AI 분류 모드 전환 가능 (선택)</li>
+      </ul>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">4-3. 메일 처리 상태 관리</div>
+      <div class="chip-row">
+        <div class="chip"><span class="chip-dot" style="background:#c43a3a"></span> 미처리</div>
+        <div class="chip"><span class="chip-dot" style="background:#c48a2a"></span> 답변 대기</div>
+        <div class="chip"><span class="chip-dot" style="background:#3a9e6a"></span> 처리완료</div>
+        <div class="chip"><span class="chip-dot" style="background:#3a9e6a"></span> 답변완료</div>
+      </div>
+      <ul class="feature-list">
+        <li>각 메일은 위 4가지 상태 중 하나로 관리</li>
+        <li>상태는 localStorage에 저장, 새로고침 후에도 유지</li>
+        <li>"↩ 미처리로 되돌리기" 기능 제공</li>
+        <li>봉투 아이콘으로 실제 메일함 읽음처리 여부 표시 (📬→📭)</li>
+      </ul>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">4-4. 답변 관리</div>
+      <ul class="feature-list">
+        <li>유형별 답변 템플릿 자동 적용 ({{이름}}, {{교육명}} 변수 지원)</li>
+        <li>발송 전 미리보기 팝업에서 내용 수정 가능</li>
+        <li>검토 후 발송 / 즉시 발송 2가지 모드 지원</li>
+        <li>답변 대기열: 기본 접힘 상태, "내용 수정" 클릭 시 펼치기</li>
+        <li>전체 승인 발송 기능</li>
+        <li>발송 이력 7일 보관</li>
+      </ul>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">4-5. 실제 메일함 읽음처리</div>
+      <ul class="feature-list">
+        <li>Playwright로 Hunet API 호출하여 실제 메일함에서 읽음 처리</li>
+        <li>대상 폴더 및 sharedFlag 자동 전달 (부서메일 경로 사용)</li>
+        <li>성공 시 봉투 아이콘 📬 → 📭 변경, localStorage 저장</li>
+        <li>서버 연결 실패 시에도 앱 내에서 처리완료로 변경 (graceful fallback)</li>
+      </ul>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">4-6. 대시보드 KPI</div>
+      <table>
+        <tr><th>지표</th><th>계산 방식</th></tr>
+        <tr><td>미처리 건수</td><td>status === '미처리' 건수</td></tr>
+        <tr><td>당일 처리율</td><td>(전체 - 미처리) / 전체 × 100%</td></tr>
+        <tr><td>자동 분류율</td><td>신뢰도 70% 이상 건수 / 전체 × 100%</td></tr>
+        <tr><td>답변 발송 완료</td><td>status === '답변완료' 건수</td></tr>
+        <tr><td>답변 대기 건수</td><td>답변 대기열(replyQueue) 건수</td></tr>
+      </table>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">4-7. 설정</div>
+      <ul class="feature-list">
+        <li>분류 키워드 규칙 관리 (유형별 추가/삭제)</li>
+        <li>답변 템플릿 관리 (대기열용 / 처리완료용 분리)</li>
+        <li>서명 관리 (HTML 편집 + 미리보기)</li>
+        <li>자동 처리완료 기간 설정 (기본 30일)</li>
+        <li>Claude AI API 키 설정</li>
+        <li>Node.js / Playwright 설치 확인</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 05 메일 처리 흐름 -->
+  <div class="section" id="s5">
+    <div class="section-num">05</div>
+    <div class="section-title">메일 처리 흐름</div>
+
+    <div class="sub">
+      <div class="sub-title">일반 처리 흐름</div>
+      <div class="flow">
+        <div class="flow-step">메일 가져오기</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">자동 분류</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">수신함 확인</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">답변 대기열 이동</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">내용 수정 (선택)</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">발송 승인</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">답변완료</div>
+      </div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">빠른 처리 흐름 (검토 불필요한 경우)</div>
+      <div class="flow">
+        <div class="flow-step">메일 선택</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">처리 완료 클릭</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">미리보기 확인</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">발송 후 처리완료</div>
+      </div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">읽음처리 흐름</div>
+      <div class="flow">
+        <div class="flow-step">📨 읽음처리 버튼</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">localhost:3412/api/mark-read</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Playwright → Hunet API</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">📭 아이콘 변경</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 06 비기능 요구사항 -->
+  <div class="section" id="s6">
+    <div class="section-num">06</div>
+    <div class="section-title">비기능 요구사항</div>
+
+    <table>
+      <tr><th>항목</th><th>요구사항</th><th>현황</th></tr>
+      <tr>
+        <td>가용성</td>
+        <td>Mac 부팅 시 서버 자동 시작</td>
+        <td><span class="badge badge-done">완료</span> LaunchAgent 설정</td>
+      </tr>
+      <tr>
+        <td>접근성</td>
+        <td>어디서든 URL로 UI 접근 가능</td>
+        <td><span class="badge badge-done">완료</span> GitHub Pages 배포</td>
+      </tr>
+      <tr>
+        <td>보안</td>
+        <td>Hunet 인증 정보 안전하게 관리</td>
+        <td><span class="badge badge-done">완료</span> HunetMessenger config.json 사용</td>
+      </tr>
+      <tr>
+        <td>데이터 지속성</td>
+        <td>처리 상태 새로고침 후에도 유지</td>
+        <td><span class="badge badge-done">완료</span> localStorage 저장</td>
+      </tr>
+      <tr>
+        <td>확장성</td>
+        <td>팀원 공동 사용 가능한 구조</td>
+        <td><span class="badge badge-plan">예정</span> 사내 서버 배포 또는 Cloudflare Tunnel</td>
+      </tr>
+      <tr>
+        <td>반응형</td>
+        <td>모바일 기본 지원</td>
+        <td><span class="badge badge-done">완료</span> 900px 이하 반응형 레이아웃</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- 07 제약사항 및 한계 -->
+  <div class="section" id="s7">
+    <div class="section-num">07</div>
+    <div class="section-title">제약사항 및 한계</div>
+
+    <div class="callout">
+      Hunet은 <strong>공식 REST API를 제공하지 않습니다.</strong> 모든 메일 수집·발송·읽음처리는 Playwright 브라우저 자동화를 통해 구현되었습니다.
+    </div>
+
+    <table>
+      <tr><th>제약사항</th><th>내용</th><th>우선순위</th></tr>
+      <tr>
+        <td>로컬 서버 의존성</td>
+        <td>박차민님 Mac이 켜져 있어야 메일 수집·읽음처리 동작</td>
+        <td><span class="badge badge-high">높음</span></td>
+      </tr>
+      <tr>
+        <td>단일 사용자</td>
+        <td>현재 다른 PC에서는 API 기능 사용 불가 (UI만 접근 가능)</td>
+        <td><span class="badge badge-mid">중간</span></td>
+      </tr>
+      <tr>
+        <td>메일 발신함 없음</td>
+        <td>Hunet 발신함 API 미제공으로 발송 내역 수신함에서 확인 불가</td>
+        <td><span class="badge badge-low">낮음</span></td>
+      </tr>
+      <tr>
+        <td>세션 만료</td>
+        <td>Hunet 세션 만료 시 HunetMessenger에서 재로그인 필요</td>
+        <td><span class="badge badge-mid">중간</span></td>
+      </tr>
+      <tr>
+        <td>메일 데이터 휘발</td>
+        <td>새로고침 시 메일 목록이 초기화되어 재수집 필요</td>
+        <td><span class="badge badge-mid">중간</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- 08 향후 로드맵 -->
+  <div class="section" id="s8">
+    <div class="section-num">08</div>
+    <div class="section-title">향후 로드맵</div>
+
+    <table>
+      <tr><th>우선순위</th><th>기능</th><th>내용</th><th>상태</th></tr>
+      <tr>
+        <td><span class="badge badge-high">높음</span></td>
+        <td>마지막 수집 시간 표시</td>
+        <td>버튼 옆에 "마지막 수집: 09:32" 표시</td>
+        <td><span class="badge badge-plan">예정</span></td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-high">높음</span></td>
+        <td>메일 검색</td>
+        <td>제목/발신자 실시간 검색창</td>
+        <td><span class="badge badge-plan">예정</span></td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-mid">중간</span></td>
+        <td>주간 그래프 실데이터 반영</td>
+        <td>하드코딩된 샘플값 → 실제 수집 데이터 기반</td>
+        <td><span class="badge badge-plan">예정</span></td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-mid">중간</span></td>
+        <td>미처리 경과 시간 표시</td>
+        <td>"3시간 전", "어제" 등 + 하루 이상 시 빨간 강조</td>
+        <td><span class="badge badge-plan">예정</span></td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-mid">중간</span></td>
+        <td>되돌리기 확인창</td>
+        <td>"↩ 미처리로 되돌리기" 실수 방지 확인 팝업</td>
+        <td><span class="badge badge-plan">예정</span></td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-low">낮음</span></td>
+        <td>팀 공유 (다중 사용자)</td>
+        <td>Cloudflare Tunnel 또는 사내 서버 배포</td>
+        <td><span class="badge badge-plan">예정</span></td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-low">낮음</span></td>
+        <td>메일 데이터 영구 저장</td>
+        <td>새로고침 후에도 메일 목록 유지</td>
+        <td><span class="badge badge-plan">예정</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- 09 변경 이력 -->
+  <div class="section" id="s9">
+    <div class="section-num">09</div>
+    <div class="section-title">변경 이력</div>
+
+    <div class="version-row">
+      <div class="version-tag">v1.3</div>
+      <div class="version-date">2026-05-20</div>
+      <div class="version-desc">봉투 아이콘(읽음처리 표시) 추가, 메일 본문 접기/펼치기, 답변 대기열 본문 숨김(내용 수정 시만 표시), PRD 재작성</div>
+    </div>
+    <div class="version-row">
+      <div class="version-tag">v1.2</div>
+      <div class="version-date">2026-05-16</div>
+      <div class="version-desc">실제 메일함 읽음처리 수정 (부서메일함 폴더 경로 정확히 전달), hunet-session.js 동일 Chrome 프로필 재사용, GitHub PAT 연결 및 push 자동화</div>
+    </div>
+    <div class="version-row">
+      <div class="version-tag">v1.1</div>
+      <div class="version-date">2026-05-15</div>
+      <div class="version-desc">LaunchAgent 자동 시작 설정, 뱃지 표시(답변완료·처리완료), 미처리 되돌리기, 답변 미리보기 팝업, 탭별 카운트 수정</div>
+    </div>
+    <div class="version-row">
+      <div class="version-tag">v1.0</div>
+      <div class="version-date">2026-05-14</div>
+      <div class="version-desc">초기 버전: 대시보드 / 수신함 / 답변관리 / 설정 구현, Playwright 메일 수집, 키워드 자동 분류, 템플릿 답변 발송</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
