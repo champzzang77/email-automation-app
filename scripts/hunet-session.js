@@ -6,8 +6,16 @@
 const { chromium } = require('playwright');
 const fs   = require('fs');
 const path = require('path');
+const os   = require('os');
 
-const CONFIG_PATH = path.join(process.env.HOME || process.env.USERPROFILE, 'Library', 'Application Support', 'HunetMessenger', 'config.json');
+function getHunetConfigPath() {
+  if (process.platform === 'win32') {
+    const appdata = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
+    return path.join(appdata, 'HunetMessenger', 'config.json');
+  }
+  return path.join(os.homedir(), 'Library', 'Application Support', 'HunetMessenger', 'config.json');
+}
+const CONFIG_PATH = getHunetConfigPath();
 // hunet_mail_v2.js 와 동일한 프로필 사용 → 이미 로그인된 Chrome 세션 재사용
 const PROFILE_DIR = path.join(__dirname, '..', '.profiles', 'hunet-mail');
 

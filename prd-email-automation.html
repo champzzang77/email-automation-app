@@ -3,553 +3,1135 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PRD — 이메일 자동화 서비스</title>
+<title>PRD — 이메일 확인 및 답변 자동화 서비스</title>
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --terra: #c45c3a; --terra-l: #d97550;
-  --slate: #1c1c22; --slate2: #26262e;
-  --text-s: #8a8780; --text-m: #a09d96;
-  --border: #e0ddd7; --bg: #f0ede8; --card: #faf9f7;
-  --green: #3a9e6a; --amber: #c48a2a; --red: #c43a3a;
+  --slate:    #1c1c22;
+  --slate2:   #26262e;
+  --slate3:   #32323c;
+  --slate4:   #42424f;
+  --terra:    #c45c3a;
+  --terra-l:  #d97550;
+  --terra-d:  #9e4a2e;
+  --text:     #e8e6e0;
+  --text-m:   #a09d96;
+  --text-s:   #6e6c66;
+  --bg:       #f0ede8;
+  --card:     #faf9f7;
+  --white:    #ffffff;
+  --border:   #e0ddd7;
+  --green:    #3a9e6a;
+  --amber:    #c48a2a;
+  --red:      #c43a3a;
+  --sidebar-w: 220px;
 }
-body { font-family: 'Pretendard', -apple-system, sans-serif; background: var(--bg); color: #2a2825; font-size: 14px; line-height: 1.7; }
-.wrap { max-width: 860px; margin: 0 auto; padding: 48px 32px 80px; }
 
-/* HEADER */
-.doc-header { border-bottom: 3px solid var(--terra); padding-bottom: 28px; margin-bottom: 40px; }
-.doc-tag { font-size: 10px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--terra); margin-bottom: 10px; }
-.doc-title { font-size: 32px; font-weight: 900; color: var(--slate); line-height: 1.2; margin-bottom: 12px; letter-spacing: -.02em; }
-.doc-meta { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 16px; }
-.meta-item { font-size: 12px; color: var(--text-s); }
-.meta-item strong { color: var(--slate); font-weight: 700; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Pretendard', -apple-system, sans-serif;
+  background: var(--bg);
+  color: #2a2825;
+  font-size: 15px;
+  line-height: 1.7;
+  display: flex;
+}
 
-/* TOC */
-.toc { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 40px; }
-.toc-title { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--text-s); margin-bottom: 12px; }
-.toc-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
-.toc-list li a { font-size: 13px; color: var(--slate); text-decoration: none; display: flex; align-items: center; gap: 8px; }
-.toc-list li a:hover { color: var(--terra); }
-.toc-num { font-size: 11px; color: var(--text-s); min-width: 20px; }
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--slate);
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sb-brand {
+  padding: 32px 24px 24px;
+  border-bottom: 1px solid var(--slate3);
+}
+.sb-brand-tag {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--terra);
+  margin-bottom: 6px;
+}
+.sb-brand-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.5;
+}
+.sb-nav {
+  flex: 1;
+  padding: 24px 0;
+  overflow-y: auto;
+}
+.sb-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 24px;
+  cursor: pointer;
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: all .2s;
+}
+.sb-nav-item:hover { background: var(--slate2); }
+.sb-nav-item.active {
+  background: var(--slate2);
+  border-left-color: var(--terra);
+}
+.sb-nav-num {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: var(--text-s);
+  min-width: 20px;
+  transition: color .2s;
+}
+.sb-nav-item.active .sb-nav-num { color: var(--terra); }
+.sb-nav-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-m);
+  transition: color .2s;
+}
+.sb-nav-item.active .sb-nav-label { color: var(--text); }
+.sb-footer {
+  padding: 16px 24px 24px;
+  border-top: 1px solid var(--slate3);
+}
+.sb-footer-meta {
+  font-size: 10px;
+  color: var(--text-s);
+  line-height: 1.8;
+}
+.sb-footer-meta strong { color: var(--text-m); }
 
-/* SECTION */
-.section { margin-bottom: 48px; }
-.section-num { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--terra); margin-bottom: 6px; }
-.section-title { font-size: 20px; font-weight: 800; color: var(--slate); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
-.section p { margin-bottom: 12px; color: #3a3835; }
+/* ── MAIN ── */
+.main {
+  flex: 1;
+  min-width: 0;
+  overflow-x: hidden;
+}
 
-/* SUBSECTION */
-.sub { margin-bottom: 24px; }
-.sub-title { font-size: 14px; font-weight: 700; color: var(--slate); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
-.sub-title::before { content: ''; display: inline-block; width: 4px; height: 14px; background: var(--terra); border-radius: 2px; }
+/* ── HERO ── */
+.hero {
+  background: var(--slate);
+  padding: 72px 80px 64px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: 'PRD';
+  position: absolute;
+  right: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 180px;
+  font-weight: 900;
+  color: var(--slate2);
+  letter-spacing: -.05em;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+.hero-tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--terra);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hero-tag::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 1px;
+  background: var(--terra);
+}
+.hero-title {
+  font-size: 38px;
+  font-weight: 900;
+  color: var(--text);
+  line-height: 1.2;
+  letter-spacing: -.03em;
+  margin-bottom: 16px;
+  max-width: 560px;
+}
+.hero-sub {
+  font-size: 14px;
+  color: var(--text-m);
+  max-width: 500px;
+  line-height: 1.7;
+  margin-bottom: 32px;
+}
+.hero-meta {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.hero-meta-item { }
+.hero-meta-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--text-s);
+  margin-bottom: 3px;
+}
+.hero-meta-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
 
-/* TABLE */
-table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: 13px; }
-th { background: #f5f3ef; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-s); padding: 10px 14px; border-bottom: 2px solid var(--border); }
-td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: #3a3835; vertical-align: top; }
-tr:last-child td { border-bottom: none; }
-tr:hover td { background: #f5f3ef; }
+/* ── SECTION ── */
+.section {
+  padding: 80px 80px 64px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.section:last-child { border-bottom: none; }
+.section-bg { background: var(--card); }
 
-/* BADGE */
-.badge { display: inline-flex; align-items: center; font-size: 10px; font-weight: 700; letter-spacing: .06em; padding: 2px 8px; border-radius: 4px; }
-.badge-done { background: rgba(58,158,106,.12); color: var(--green); }
-.badge-wip  { background: rgba(196,138,42,.12); color: var(--amber); }
-.badge-plan { background: var(--border); color: var(--text-s); }
-.badge-high { background: rgba(196,58,58,.12); color: var(--red); }
-.badge-mid  { background: rgba(196,138,42,.12); color: var(--amber); }
-.badge-low  { background: var(--border); color: var(--text-s); }
+.section-editorial {
+  font-size: 100px;
+  font-weight: 900;
+  color: var(--border);
+  letter-spacing: -.05em;
+  line-height: 1;
+  margin-bottom: -12px;
+  user-select: none;
+}
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--terra);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-label::before {
+  content: '';
+  display: block;
+  width: 16px;
+  height: 2px;
+  background: var(--terra);
+}
+.section-title {
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--slate);
+  letter-spacing: -.02em;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+.section-desc {
+  font-size: 14px;
+  color: var(--text-s);
+  margin-bottom: 40px;
+  max-width: 600px;
+}
 
-/* CALLOUT */
-.callout { border-left: 3px solid var(--terra); background: rgba(196,92,58,.05); border-radius: 0 6px 6px 0; padding: 14px 18px; margin: 16px 0; font-size: 13px; color: #3a3835; }
-.callout.blue { border-color: #3a7ec4; background: rgba(58,126,196,.05); }
-.callout.green { border-color: var(--green); background: rgba(58,158,106,.05); }
+/* ── PROBLEM SECTION ── */
+.problem-lead {
+  background: var(--slate);
+  border-radius: 12px;
+  padding: 32px 36px;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
+}
+.problem-lead::before {
+  content: '!';
+  position: absolute;
+  right: 30px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 120px;
+  font-weight: 900;
+  color: var(--slate2);
+  line-height: 1;
+}
+.problem-lead-text {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.6;
+  max-width: 560px;
+}
+.problem-lead-text em {
+  color: var(--terra-l);
+  font-style: normal;
+  font-weight: 800;
+}
 
-/* LIST */
-ul.feature-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
-ul.feature-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: #3a3835; }
-ul.feature-list li::before { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+.problem-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.problem-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 20px;
+  transition: box-shadow .15s;
+}
+.problem-item:hover { box-shadow: 0 4px 16px rgba(0,0,0,.06); }
+.problem-num {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-s);
+  min-width: 24px;
+  margin-top: 2px;
+}
+.problem-content { flex: 1; }
+.problem-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--slate);
+  margin-bottom: 4px;
+}
+.problem-body {
+  font-size: 13px;
+  color: #5a5754;
+  line-height: 1.6;
+}
+.severity {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  padding: 3px 10px;
+  border-radius: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.severity-high { background: rgba(196,58,58,.1); color: var(--red); }
+.severity-mid  { background: rgba(196,138,42,.1); color: var(--amber); }
+.severity-low  { background: var(--border); color: var(--text-s); }
+.severity::before { content: '●'; font-size: 7px; }
 
-ul.plain { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
-ul.plain li { font-size: 13px; color: #3a3835; }
+/* ── KPI CARDS ── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+.kpi-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.kpi-card-top {
+  height: 3px;
+  background: var(--terra);
+}
+.kpi-card-body {
+  padding: 22px 24px;
+}
+.kpi-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text-s);
+  margin-bottom: 16px;
+}
+.kpi-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.kpi-current {
+  flex: 1;
+  text-align: center;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: 6px;
+}
+.kpi-current-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-s);
+  margin-bottom: 4px;
+}
+.kpi-current-val {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--red);
+  letter-spacing: -.02em;
+}
+.kpi-arrow {
+  font-size: 20px;
+  color: var(--border);
+  flex-shrink: 0;
+}
+.kpi-target {
+  flex: 1;
+  text-align: center;
+  padding: 12px;
+  background: rgba(58,158,106,.06);
+  border-radius: 6px;
+  border: 1px solid rgba(58,158,106,.15);
+}
+.kpi-target-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 4px;
+}
+.kpi-target-val {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--green);
+  letter-spacing: -.02em;
+}
+.kpi-desc {
+  font-size: 12px;
+  color: var(--text-s);
+  margin-top: 10px;
+  line-height: 1.5;
+}
 
-/* ARCH DIAGRAM */
-.arch { background: var(--slate2); border-radius: 10px; padding: 24px 28px; margin: 16px 0; font-family: monospace; font-size: 12px; color: #94a3b8; line-height: 2; }
-.arch .highlight { color: var(--terra-l); font-weight: 700; }
-.arch .dim { color: #4a4a5a; }
+/* ── FEATURE CARDS ── */
+.feature-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.feature-card:last-child { margin-bottom: 0; }
+.feature-card-head {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--border);
+}
+.feature-big-num {
+  font-size: 72px;
+  font-weight: 900;
+  color: var(--border);
+  letter-spacing: -.04em;
+  line-height: 1;
+  padding: 24px 28px;
+  min-width: 120px;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid var(--border);
+  background: var(--bg);
+  transition: color .2s;
+}
+.feature-card:hover .feature-big-num { color: rgba(196,92,58,.18); }
+.feature-head-content {
+  padding: 24px 28px;
+  flex: 1;
+}
+.feature-tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.tag {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 3px;
+}
+.tag-must { background: rgba(196,92,58,.12); color: var(--terra); }
+.tag-should { background: rgba(196,138,42,.12); color: var(--amber); }
+.tag-could { background: var(--border); color: var(--text-s); }
+.feature-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--slate);
+  margin-bottom: 6px;
+}
+.feature-why {
+  font-size: 13px;
+  color: var(--text-s);
+  line-height: 1.6;
+}
+.feature-card-body {
+  padding: 28px 28px 28px 120px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+.feature-col-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--text-s);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.feature-col-title::before {
+  content: '';
+  width: 12px;
+  height: 2px;
+  background: var(--terra);
+  display: block;
+}
 
-/* STATUS CHIP */
-.chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
-.chip { display: inline-flex; align-items: center; gap: 6px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 500; color: var(--slate); }
-.chip-dot { width: 7px; height: 7px; border-radius: 50%; }
+.req-list { display: flex; flex-direction: column; gap: 8px; }
+.req-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: #3a3835;
+  line-height: 1.5;
+}
+.req-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--terra);
+  flex-shrink: 0;
+  margin-top: 6px;
+}
 
-/* FLOW */
-.flow { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin: 12px 0; }
-.flow-step { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 600; color: var(--slate); }
-.flow-arrow { color: var(--text-s); font-size: 14px; }
+.scenario-box {
+  background: var(--slate);
+  border-radius: 8px;
+  padding: 18px 20px;
+}
+.scenario-step {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--slate3);
+}
+.scenario-step:last-child { border-bottom: none; padding-bottom: 0; }
+.scenario-step:first-child { padding-top: 0; }
+.step-num {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--terra);
+  min-width: 20px;
+  margin-top: 1px;
+}
+.step-text {
+  font-size: 12px;
+  color: var(--text-m);
+  line-height: 1.6;
+}
+.step-text strong { color: var(--text); font-weight: 600; }
 
-/* VERSION */
-.version-row { display: flex; align-items: baseline; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
-.version-tag { font-size: 12px; font-weight: 700; color: var(--terra); min-width: 60px; }
-.version-date { font-size: 11px; color: var(--text-s); min-width: 80px; }
-.version-desc { font-size: 13px; color: #3a3835; }
+/* ── STAKEHOLDER ── */
+.stakeholder-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.stakeholder-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px;
+}
+.stakeholder-icon {
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+.stakeholder-role {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--terra);
+  margin-bottom: 4px;
+}
+.stakeholder-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--slate);
+  margin-bottom: 10px;
+}
+.stakeholder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.stakeholder-item {
+  font-size: 12px;
+  color: #5a5754;
+  display: flex;
+  gap: 8px;
+}
+.stakeholder-item::before { content: '—'; color: var(--border); }
+
+/* ── SCOPE TABLE ── */
+.scope-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.scope-card {
+  border-radius: 10px;
+  padding: 24px;
+}
+.scope-in {
+  background: rgba(58,158,106,.06);
+  border: 1px solid rgba(58,158,106,.2);
+}
+.scope-out {
+  background: rgba(196,58,58,.04);
+  border: 1px solid rgba(196,58,58,.12);
+}
+.scope-card-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.scope-in .scope-card-title { color: var(--green); }
+.scope-out .scope-card-title { color: var(--red); }
+.scope-items { display: flex; flex-direction: column; gap: 8px; }
+.scope-item {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  color: #3a3835;
+  line-height: 1.5;
+}
+.scope-in  .scope-item::before { content: '✓'; color: var(--green); font-weight: 700; }
+.scope-out .scope-item::before { content: '✕'; color: var(--red); font-weight: 700; }
+
+/* ── DIVIDER ── */
+.divider {
+  height: 1px;
+  background: linear-gradient(to right, var(--terra), transparent);
+  margin: 32px 0;
+  opacity: .3;
+}
+
+/* ── UTILS ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+.badge-done    { background: rgba(58,158,106,.12); color: var(--green); }
+.badge-wip     { background: rgba(196,138,42,.12); color: var(--amber); }
+.badge-plan    { background: var(--border); color: var(--text-s); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .hero { padding: 48px 28px 40px; }
+  .hero::before { display: none; }
+  .hero-title { font-size: 26px; }
+  .section { padding: 56px 28px 48px; }
+  .section-editorial { font-size: 64px; }
+  .kpi-grid { grid-template-columns: 1fr; }
+  .feature-card-body { padding: 24px; grid-template-columns: 1fr; }
+  .feature-big-num { font-size: 48px; min-width: 80px; padding: 20px; }
+  .stakeholder-grid { grid-template-columns: 1fr; }
+  .scope-grid { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <!-- HEADER -->
-  <div class="doc-header">
-    <div class="doc-tag">Product Requirements Document</div>
-    <div class="doc-title">이메일 자동화 서비스<br>교육운영1팀</div>
-    <div class="doc-meta">
-      <div class="meta-item"><strong>작성자</strong> 박차민 (교육운영1팀)</div>
-      <div class="meta-item"><strong>최초 작성</strong> 2026년 5월</div>
-      <div class="meta-item"><strong>최종 수정</strong> 2026년 5월 20일</div>
-      <div class="meta-item"><strong>버전</strong> v1.3</div>
-      <div class="meta-item"><strong>상태</strong> <span class="badge badge-wip">개발 중</span></div>
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-brand-tag">PRD v1.0</div>
+    <div class="sb-brand-name">이메일 자동화<br>서비스</div>
+  </div>
+  <nav class="sb-nav">
+    <a class="sb-nav-item active" href="#s1">
+      <span class="sb-nav-num">01</span>
+      <span class="sb-nav-label">배경 & 문제</span>
+    </a>
+    <a class="sb-nav-item" href="#s2">
+      <span class="sb-nav-num">02</span>
+      <span class="sb-nav-label">이해관계자</span>
+    </a>
+    <a class="sb-nav-item" href="#s3">
+      <span class="sb-nav-num">03</span>
+      <span class="sb-nav-label">성공 지표</span>
+    </a>
+    <a class="sb-nav-item" href="#s4">
+      <span class="sb-nav-num">04</span>
+      <span class="sb-nav-label">기능 명세</span>
+    </a>
+    <a class="sb-nav-item" href="#s5">
+      <span class="sb-nav-num">05</span>
+      <span class="sb-nav-label">범위</span>
+    </a>
+  </nav>
+  <div class="sb-footer">
+    <div class="sb-footer-meta">
+      <div><strong>담당팀</strong> 교육운영1팀</div>
+      <div><strong>작성일</strong> 2026. 05</div>
+      <div><strong>버전</strong> v1.0</div>
+      <div><strong>상태</strong> <span class="badge badge-wip">개발 중</span></div>
     </div>
   </div>
+</aside>
 
-  <!-- TOC -->
-  <div class="toc">
-    <div class="toc-title">목차</div>
-    <ul class="toc-list">
-      <li><a href="#s1"><span class="toc-num">01</span> 배경 및 목적</a></li>
-      <li><a href="#s2"><span class="toc-num">02</span> 대상 사용자</a></li>
-      <li><a href="#s3"><span class="toc-num">03</span> 시스템 구조</a></li>
-      <li><a href="#s4"><span class="toc-num">04</span> 핵심 기능 명세</a></li>
-      <li><a href="#s5"><span class="toc-num">05</span> 메일 처리 흐름</a></li>
-      <li><a href="#s6"><span class="toc-num">06</span> 비기능 요구사항</a></li>
-      <li><a href="#s7"><span class="toc-num">07</span> 제약사항 및 한계</a></li>
-      <li><a href="#s8"><span class="toc-num">08</span> 향후 로드맵</a></li>
-      <li><a href="#s9"><span class="toc-num">09</span> 변경 이력</a></li>
-    </ul>
-  </div>
+<!-- ── MAIN ── -->
+<main class="main">
 
-  <!-- 01 배경 및 목적 -->
-  <div class="section" id="s1">
-    <div class="section-num">01</div>
-    <div class="section-title">배경 및 목적</div>
-
-    <div class="sub">
-      <div class="sub-title">문제 상황</div>
-      <p>교육운영1팀은 매일 다수의 기업 HR 담당자로부터 교육 신청·변경·취소 메일을 수신합니다. 기존에는 담당자가 Hunet 사내 메일을 수동으로 열어 메일을 하나씩 확인하고, 유형을 판단한 뒤 수작업으로 답변을 작성하는 방식으로 업무를 처리했습니다.</p>
-      <p>이 과정에서 누락·지연이 발생하고, 반복적인 답변 작업에 불필요한 시간이 소요되는 문제가 있었습니다.</p>
-    </div>
-
-    <div class="sub">
-      <div class="sub-title">목적</div>
-      <ul class="feature-list">
-        <li>Hunet 사내 메일을 자동으로 수집하여 대시보드에서 한눈에 관리</li>
-        <li>메일 유형(신청/변경/취소/기타)을 키워드 기반으로 자동 분류</li>
-        <li>분류 결과에 따라 맞춤 답변 템플릿 자동 생성 및 발송</li>
-        <li>처리 현황을 실시간 KPI로 시각화하여 업무 효율 측정</li>
-      </ul>
-    </div>
-
-    <div class="sub">
-      <div class="sub-title">기대 효과</div>
-      <table>
-        <tr><th>항목</th><th>기존</th><th>개선 후</th></tr>
-        <tr><td>메일 확인 방식</td><td>Hunet 메일함 수동 접속</td><td>대시보드 자동 수집</td></tr>
-        <tr><td>유형 분류</td><td>담당자 직접 판단</td><td>키워드 자동 분류 (목표 80%+)</td></tr>
-        <tr><td>답변 작성</td><td>매번 수작업</td><td>템플릿 자동 생성 후 검토·발송</td></tr>
-        <tr><td>처리 현황 파악</td><td>불가능</td><td>실시간 KPI 대시보드</td></tr>
-        <tr><td>읽음 처리</td><td>메일함 직접 접속</td><td>버튼 한 번으로 실제 메일함 읽음처리</td></tr>
-      </table>
-    </div>
-  </div>
-
-  <!-- 02 대상 사용자 -->
-  <div class="section" id="s2">
-    <div class="section-num">02</div>
-    <div class="section-title">대상 사용자</div>
-
-    <table>
-      <tr><th>구분</th><th>역할</th><th>주요 사용 기능</th></tr>
-      <tr>
-        <td><strong>박차민 (교육운영1팀)</strong></td>
-        <td>주 사용자 / 운영자</td>
-        <td>메일 수집, 분류, 답변 승인, 읽음처리, 설정 관리</td>
-      </tr>
-      <tr>
-        <td>교육운영1팀 팀원 <span class="badge badge-plan">예정</span></td>
-        <td>추후 확대 사용자</td>
-        <td>수신함 확인, 답변 승인</td>
-      </tr>
-    </table>
-
-    <div class="callout">
-      현재는 <strong>단일 사용자 구조</strong>로 운영됩니다. 박차민님의 Mac에서 로컬 서버가 실행되어야 메일 수집 및 읽음처리 기능이 동작합니다. 팀 공유는 사내 서버 배포 또는 Cloudflare Tunnel 설정 후 가능합니다.
-    </div>
-  </div>
-
-  <!-- 03 시스템 구조 -->
-  <div class="section" id="s3">
-    <div class="section-num">03</div>
-    <div class="section-title">시스템 구조</div>
-
-    <div class="sub">
-      <div class="sub-title">전체 아키텍처</div>
-      <div class="arch">
-<span class="highlight">[ 사용자 브라우저 ]</span>
-  GitHub Pages URL 접속
-  https://champzzang77.github.io/email-automation-app/
-        │
-        ▼
-<span class="highlight">[ email-automation-app.html ]</span>  ← 단일 HTML 앱 (UI 전체)
-  대시보드 / 수신함 / 답변관리 / 설정
-        │
-        │  HTTP API (localhost:3412)
-        ▼
-<span class="highlight">[ Node.js 로컬 서버 — server.js ]</span>  ← Mac에서 상시 실행
-  /api/fetch      → 메일 수집
-  /api/mark-read  → 읽음 처리
-  /api/send       → 메일 발송
-        │
-        ▼
-<span class="highlight">[ Playwright (Chromium) ]</span>
-  .profiles/hunet-mail/  ← 로그인된 Chrome 세션 재사용
-        │
-        ▼
-<span class="highlight">[ Hunet 사내 메일함 ]</span>
-  부서메일 > 교육운영1팀 > 박차민
-  https://hug.hunet.co.kr/app/mail
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-tag">Product Requirements Document</div>
+    <div class="hero-title">이메일 확인 및<br>답변 자동화 서비스</div>
+    <div class="hero-sub">B2B 맞춤형 연수원 운영팀의 반복 이메일 업무를 자동화하여 운영 효율을 높이고 HR 담당자 응답 만족도를 개선합니다.</div>
+    <div class="hero-meta">
+      <div class="hero-meta-item">
+        <div class="hero-meta-label">서비스명</div>
+        <div class="hero-meta-val">이메일 자동화 서비스</div>
       </div>
-    </div>
-
-    <div class="sub">
-      <div class="sub-title">구성 파일</div>
-      <table>
-        <tr><th>파일</th><th>역할</th></tr>
-        <tr><td><code>email-automation-app.html</code></td><td>전체 UI 앱 (단일 HTML)</td></tr>
-        <tr><td><code>index.html</code></td><td>GitHub Pages 배포용 (앱과 동일)</td></tr>
-        <tr><td><code>server.js</code></td><td>로컬 API 서버 (포트 3412)</td></tr>
-        <tr><td><code>launch.js</code></td><td>Playwright 메일 수집 스크립트</td></tr>
-        <tr><td><code>scripts/hunet-session.js</code></td><td>Hunet 세션 싱글톤 (읽음처리·발송)</td></tr>
-        <tr><td><code>.profiles/hunet-mail/</code></td><td>Chrome 로그인 세션 저장 경로</td></tr>
-        <tr><td><code>~/Library/LaunchAgents/kr.hunet.email-automation.plist</code></td><td>Mac 부팅 시 서버 자동 시작</td></tr>
-      </table>
-    </div>
-
-    <div class="sub">
-      <div class="sub-title">데이터 저장 방식</div>
-      <table>
-        <tr><th>데이터</th><th>저장 위치</th><th>비고</th></tr>
-        <tr><td>메일 목록</td><td>메모리 (앱 실행 중)</td><td>새로고침 시 재수집 필요</td></tr>
-        <tr><td>처리 상태 (미처리/처리완료 등)</td><td>localStorage</td><td>브라우저에 영구 저장</td></tr>
-        <tr><td>읽음처리 여부 (inboxRead)</td><td>localStorage</td><td>봉투 아이콘으로 표시</td></tr>
-        <tr><td>답변 대기열</td><td>localStorage</td><td>새 메일 수집 시 동기화</td></tr>
-        <tr><td>발송 로그</td><td>localStorage</td><td>7일 보관</td></tr>
-        <tr><td>템플릿·서명·설정</td><td>localStorage</td><td>영구 저장</td></tr>
-        <tr><td>수집된 메일 원본</td><td>.mail-output/*.json</td><td>로컬 파일로 저장</td></tr>
-      </table>
-    </div>
-  </div>
-
-  <!-- 04 핵심 기능 명세 -->
-  <div class="section" id="s4">
-    <div class="section-num">04</div>
-    <div class="section-title">핵심 기능 명세</div>
-
-    <div class="sub">
-      <div class="sub-title">4-1. 메일 수집</div>
-      <ul class="feature-list">
-        <li>"메일 가져오기" 버튼 클릭 시 Playwright로 Hunet 부서메일함 자동 접속</li>
-        <li>대상 폴더: 부서메일(edulab, edu, aca) > 교육운영1팀(acaedu1, aca1) > 박차민</li>
-        <li>최대 200건(기본값) 수집, --limit 옵션으로 조정 가능</li>
-        <li>API 응답 캡처 방식 우선, 실패 시 DOM 파싱으로 fallback</li>
-        <li>페이지네이션 자동 처리 (80건/페이지 기준)</li>
-        <li>수집 결과를 .mail-output/*.json에 저장</li>
-        <li>JSON 파일 직접 불러오기(📂 JSON) 지원</li>
-      </ul>
-    </div>
-
-    <div class="sub">
-      <div class="sub-title">4-2. 자동 분류</div>
-      <ul class="feature-list">
-        <li>제목 + 본문 키워드 기반 유형 분류 (신뢰도 0~1 점수 산출)</li>
-        <li>분류 유형: 교육 신청 / 교육 변경 / 교육 취소 / 기타 / 검토 필요</li>
-        <li>신뢰도 70% 미만은 "검토 필요"로 자동 지정</li>
-        <li>수동으로 유형 변경 가능 (드롭다운)</li>
-        <li>설정 > 분류 규칙에서 키워드 추가/삭제 가능</li>
-        <li>Claude AI API 키 입력 시 AI 분류 모드 전환 가능 (선택)</li>
-      </ul>
-    </div>
-
-    <div class="sub">
-      <div class="sub-title">4-3. 메일 처리 상태 관리</div>
-      <div class="chip-row">
-        <div class="chip"><span class="chip-dot" style="background:#c43a3a"></span> 미처리</div>
-        <div class="chip"><span class="chip-dot" style="background:#c48a2a"></span> 답변 대기</div>
-        <div class="chip"><span class="chip-dot" style="background:#3a9e6a"></span> 처리완료</div>
-        <div class="chip"><span class="chip-dot" style="background:#3a9e6a"></span> 답변완료</div>
+      <div class="hero-meta-item">
+        <div class="hero-meta-label">담당팀</div>
+        <div class="hero-meta-val">교육운영1팀</div>
       </div>
-      <ul class="feature-list">
-        <li>각 메일은 위 4가지 상태 중 하나로 관리</li>
-        <li>상태는 localStorage에 저장, 새로고침 후에도 유지</li>
-        <li>"↩ 미처리로 되돌리기" 기능 제공</li>
-        <li>봉투 아이콘으로 실제 메일함 읽음처리 여부 표시 (📬→📭)</li>
-      </ul>
-    </div>
-
-    <div class="sub">
-      <div class="sub-title">4-4. 답변 관리</div>
-      <ul class="feature-list">
-        <li>유형별 답변 템플릿 자동 적용 ({{이름}}, {{교육명}} 변수 지원)</li>
-        <li>발송 전 미리보기 팝업에서 내용 수정 가능</li>
-        <li>검토 후 발송 / 즉시 발송 2가지 모드 지원</li>
-        <li>답변 대기열: 기본 접힘 상태, "내용 수정" 클릭 시 펼치기</li>
-        <li>전체 승인 발송 기능</li>
-        <li>발송 이력 7일 보관</li>
-      </ul>
-    </div>
-
-    <div class="sub">
-      <div class="sub-title">4-5. 실제 메일함 읽음처리</div>
-      <ul class="feature-list">
-        <li>Playwright로 Hunet API 호출하여 실제 메일함에서 읽음 처리</li>
-        <li>대상 폴더 및 sharedFlag 자동 전달 (부서메일 경로 사용)</li>
-        <li>성공 시 봉투 아이콘 📬 → 📭 변경, localStorage 저장</li>
-        <li>서버 연결 실패 시에도 앱 내에서 처리완료로 변경 (graceful fallback)</li>
-      </ul>
-    </div>
-
-    <div class="sub">
-      <div class="sub-title">4-6. 대시보드 KPI</div>
-      <table>
-        <tr><th>지표</th><th>계산 방식</th></tr>
-        <tr><td>미처리 건수</td><td>status === '미처리' 건수</td></tr>
-        <tr><td>당일 처리율</td><td>(전체 - 미처리) / 전체 × 100%</td></tr>
-        <tr><td>자동 분류율</td><td>신뢰도 70% 이상 건수 / 전체 × 100%</td></tr>
-        <tr><td>답변 발송 완료</td><td>status === '답변완료' 건수</td></tr>
-        <tr><td>답변 대기 건수</td><td>답변 대기열(replyQueue) 건수</td></tr>
-      </table>
-    </div>
-
-    <div class="sub">
-      <div class="sub-title">4-7. 설정</div>
-      <ul class="feature-list">
-        <li>분류 키워드 규칙 관리 (유형별 추가/삭제)</li>
-        <li>답변 템플릿 관리 (대기열용 / 처리완료용 분리)</li>
-        <li>서명 관리 (HTML 편집 + 미리보기)</li>
-        <li>자동 처리완료 기간 설정 (기본 30일)</li>
-        <li>Claude AI API 키 설정</li>
-        <li>Node.js / Playwright 설치 확인</li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- 05 메일 처리 흐름 -->
-  <div class="section" id="s5">
-    <div class="section-num">05</div>
-    <div class="section-title">메일 처리 흐름</div>
-
-    <div class="sub">
-      <div class="sub-title">일반 처리 흐름</div>
-      <div class="flow">
-        <div class="flow-step">메일 가져오기</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step">자동 분류</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step">수신함 확인</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step">답변 대기열 이동</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step">내용 수정 (선택)</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step">발송 승인</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step">답변완료</div>
+      <div class="hero-meta-item">
+        <div class="hero-meta-label">주 사용자</div>
+        <div class="hero-meta-val">운영대표 (팀원)</div>
       </div>
-    </div>
-
-    <div class="sub">
-      <div class="sub-title">빠른 처리 흐름 (검토 불필요한 경우)</div>
-      <div class="flow">
-        <div class="flow-step">메일 선택</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step">처리 완료 클릭</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step">미리보기 확인</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step">발송 후 처리완료</div>
-      </div>
-    </div>
-
-    <div class="sub">
-      <div class="sub-title">읽음처리 흐름</div>
-      <div class="flow">
-        <div class="flow-step">📨 읽음처리 버튼</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step">localhost:3412/api/mark-read</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step">Playwright → Hunet API</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step">📭 아이콘 변경</div>
+      <div class="hero-meta-item">
+        <div class="hero-meta-label">현재 도구</div>
+        <div class="hero-meta-val">다우기술 그룹웨어</div>
       </div>
     </div>
   </div>
 
-  <!-- 06 비기능 요구사항 -->
-  <div class="section" id="s6">
-    <div class="section-num">06</div>
-    <div class="section-title">비기능 요구사항</div>
+  <!-- ── 01 배경 & 문제 ── -->
+  <section class="section" id="s1">
+    <div class="section-editorial">01</div>
+    <div class="section-label">Background & Problem</div>
+    <div class="section-title">배경과 문제</div>
+    <div class="section-desc">교육운영1팀이 직면한 이메일 처리 한계와 그로 인한 운영 리스크를 정의합니다.</div>
 
-    <table>
-      <tr><th>항목</th><th>요구사항</th><th>현황</th></tr>
-      <tr>
-        <td>가용성</td>
-        <td>Mac 부팅 시 서버 자동 시작</td>
-        <td><span class="badge badge-done">완료</span> LaunchAgent 설정</td>
-      </tr>
-      <tr>
-        <td>접근성</td>
-        <td>어디서든 URL로 UI 접근 가능</td>
-        <td><span class="badge badge-done">완료</span> GitHub Pages 배포</td>
-      </tr>
-      <tr>
-        <td>보안</td>
-        <td>Hunet 인증 정보 안전하게 관리</td>
-        <td><span class="badge badge-done">완료</span> HunetMessenger config.json 사용</td>
-      </tr>
-      <tr>
-        <td>데이터 지속성</td>
-        <td>처리 상태 새로고침 후에도 유지</td>
-        <td><span class="badge badge-done">완료</span> localStorage 저장</td>
-      </tr>
-      <tr>
-        <td>확장성</td>
-        <td>팀원 공동 사용 가능한 구조</td>
-        <td><span class="badge badge-plan">예정</span> 사내 서버 배포 또는 Cloudflare Tunnel</td>
-      </tr>
-      <tr>
-        <td>반응형</td>
-        <td>모바일 기본 지원</td>
-        <td><span class="badge badge-done">완료</span> 900px 이하 반응형 레이아웃</td>
-      </tr>
-    </table>
-  </div>
-
-  <!-- 07 제약사항 및 한계 -->
-  <div class="section" id="s7">
-    <div class="section-num">07</div>
-    <div class="section-title">제약사항 및 한계</div>
-
-    <div class="callout">
-      Hunet은 <strong>공식 REST API를 제공하지 않습니다.</strong> 모든 메일 수집·발송·읽음처리는 Playwright 브라우저 자동화를 통해 구현되었습니다.
+    <div class="problem-lead">
+      <div class="problem-lead-text">
+        하루 <em>50건 이상</em>의 HR 이메일이 수신되지만,<br>
+        분류·답변·추적까지 <em>모든 과정이 수동</em>으로 처리되고 있습니다.
+      </div>
     </div>
 
-    <table>
-      <tr><th>제약사항</th><th>내용</th><th>우선순위</th></tr>
-      <tr>
-        <td>로컬 서버 의존성</td>
-        <td>박차민님 Mac이 켜져 있어야 메일 수집·읽음처리 동작</td>
-        <td><span class="badge badge-high">높음</span></td>
-      </tr>
-      <tr>
-        <td>단일 사용자</td>
-        <td>현재 다른 PC에서는 API 기능 사용 불가 (UI만 접근 가능)</td>
-        <td><span class="badge badge-mid">중간</span></td>
-      </tr>
-      <tr>
-        <td>메일 발신함 없음</td>
-        <td>Hunet 발신함 API 미제공으로 발송 내역 수신함에서 확인 불가</td>
-        <td><span class="badge badge-low">낮음</span></td>
-      </tr>
-      <tr>
-        <td>세션 만료</td>
-        <td>Hunet 세션 만료 시 HunetMessenger에서 재로그인 필요</td>
-        <td><span class="badge badge-mid">중간</span></td>
-      </tr>
-      <tr>
-        <td>메일 데이터 휘발</td>
-        <td>새로고침 시 메일 목록이 초기화되어 재수집 필요</td>
-        <td><span class="badge badge-mid">중간</span></td>
-      </tr>
-    </table>
-  </div>
-
-  <!-- 08 향후 로드맵 -->
-  <div class="section" id="s8">
-    <div class="section-num">08</div>
-    <div class="section-title">향후 로드맵</div>
-
-    <table>
-      <tr><th>우선순위</th><th>기능</th><th>내용</th><th>상태</th></tr>
-      <tr>
-        <td><span class="badge badge-high">높음</span></td>
-        <td>마지막 수집 시간 표시</td>
-        <td>버튼 옆에 "마지막 수집: 09:32" 표시</td>
-        <td><span class="badge badge-plan">예정</span></td>
-      </tr>
-      <tr>
-        <td><span class="badge badge-high">높음</span></td>
-        <td>메일 검색</td>
-        <td>제목/발신자 실시간 검색창</td>
-        <td><span class="badge badge-plan">예정</span></td>
-      </tr>
-      <tr>
-        <td><span class="badge badge-mid">중간</span></td>
-        <td>주간 그래프 실데이터 반영</td>
-        <td>하드코딩된 샘플값 → 실제 수집 데이터 기반</td>
-        <td><span class="badge badge-plan">예정</span></td>
-      </tr>
-      <tr>
-        <td><span class="badge badge-mid">중간</span></td>
-        <td>미처리 경과 시간 표시</td>
-        <td>"3시간 전", "어제" 등 + 하루 이상 시 빨간 강조</td>
-        <td><span class="badge badge-plan">예정</span></td>
-      </tr>
-      <tr>
-        <td><span class="badge badge-mid">중간</span></td>
-        <td>되돌리기 확인창</td>
-        <td>"↩ 미처리로 되돌리기" 실수 방지 확인 팝업</td>
-        <td><span class="badge badge-plan">예정</span></td>
-      </tr>
-      <tr>
-        <td><span class="badge badge-low">낮음</span></td>
-        <td>팀 공유 (다중 사용자)</td>
-        <td>Cloudflare Tunnel 또는 사내 서버 배포</td>
-        <td><span class="badge badge-plan">예정</span></td>
-      </tr>
-      <tr>
-        <td><span class="badge badge-low">낮음</span></td>
-        <td>메일 데이터 영구 저장</td>
-        <td>새로고침 후에도 메일 목록 유지</td>
-        <td><span class="badge badge-plan">예정</span></td>
-      </tr>
-    </table>
-  </div>
-
-  <!-- 09 변경 이력 -->
-  <div class="section" id="s9">
-    <div class="section-num">09</div>
-    <div class="section-title">변경 이력</div>
-
-    <div class="version-row">
-      <div class="version-tag">v1.3</div>
-      <div class="version-date">2026-05-20</div>
-      <div class="version-desc">봉투 아이콘(읽음처리 표시) 추가, 메일 본문 접기/펼치기, 답변 대기열 본문 숨김(내용 수정 시만 표시), PRD 재작성</div>
+    <div class="problem-list">
+      <div class="problem-item">
+        <div class="problem-num">P1</div>
+        <div class="problem-content">
+          <div class="problem-title">체계적인 분류 수단 부재</div>
+          <div class="problem-body">신청·변경·취소 이메일이 혼재되어 수신되지만 별도 분류 없이 운영대표가 하나씩 열람·판단해야 합니다. 처리 누락이 발생해도 즉시 인지하기 어렵습니다.</div>
+        </div>
+        <div class="severity severity-high">Critical</div>
+      </div>
+      <div class="problem-item">
+        <div class="problem-num">P2</div>
+        <div class="problem-content">
+          <div class="problem-title">반복 답변으로 인한 시간 낭비</div>
+          <div class="problem-body">동일한 내용의 답변을 매번 작성합니다. 교육 신청 접수 안내, 변경 확인 안내 등 정형화된 답변에도 전체 작성 시간이 소요됩니다.</div>
+        </div>
+        <div class="severity severity-high">High</div>
+      </div>
+      <div class="problem-item">
+        <div class="problem-num">P3</div>
+        <div class="problem-content">
+          <div class="problem-title">처리 지연으로 인한 HR 담당자 컴플레인</div>
+          <div class="problem-body">이메일 처리가 늦어지면 HR 담당자가 교육 일정 확인을 위해 재문의하거나 불만을 제기합니다. 이는 고객 신뢰도에 직접적인 영향을 미칩니다.</div>
+        </div>
+        <div class="severity severity-high">High</div>
+      </div>
+      <div class="problem-item">
+        <div class="problem-num">P4</div>
+        <div class="problem-content">
+          <div class="problem-title">단일 장애점 구조</div>
+          <div class="problem-body">운영대표 부재 시 이메일 확인·답변이 전면 중단됩니다. 백업 담당자가 없거나, 인수인계 없이 처리 현황 파악이 어려운 구조입니다.</div>
+        </div>
+        <div class="severity severity-mid">Medium</div>
+      </div>
     </div>
-    <div class="version-row">
-      <div class="version-tag">v1.2</div>
-      <div class="version-date">2026-05-16</div>
-      <div class="version-desc">실제 메일함 읽음처리 수정 (부서메일함 폴더 경로 정확히 전달), hunet-session.js 동일 Chrome 프로필 재사용, GitHub PAT 연결 및 push 자동화</div>
-    </div>
-    <div class="version-row">
-      <div class="version-tag">v1.1</div>
-      <div class="version-date">2026-05-15</div>
-      <div class="version-desc">LaunchAgent 자동 시작 설정, 뱃지 표시(답변완료·처리완료), 미처리 되돌리기, 답변 미리보기 팝업, 탭별 카운트 수정</div>
-    </div>
-    <div class="version-row">
-      <div class="version-tag">v1.0</div>
-      <div class="version-date">2026-05-14</div>
-      <div class="version-desc">초기 버전: 대시보드 / 수신함 / 답변관리 / 설정 구현, Playwright 메일 수집, 키워드 자동 분류, 템플릿 답변 발송</div>
-    </div>
-  </div>
+  </section>
 
-</div>
+  <!-- ── 02 이해관계자 ── -->
+  <section class="section section-bg" id="s2">
+    <div class="section-editorial">02</div>
+    <div class="section-label">Stakeholders</div>
+    <div class="section-title">이해관계자</div>
+    <div class="section-desc">이 서비스에 직접 관여하는 사용자와 그 역할을 정의합니다.</div>
+
+    <div class="stakeholder-grid">
+      <div class="stakeholder-card">
+        <div class="stakeholder-icon">🧑‍💼</div>
+        <div class="stakeholder-role">Primary User</div>
+        <div class="stakeholder-name">운영대표 (팀원)</div>
+        <div class="stakeholder-list">
+          <div class="stakeholder-item">수신 이메일 확인 및 분류 검토</div>
+          <div class="stakeholder-item">자동 답변 승인 및 발송</div>
+          <div class="stakeholder-item">처리 현황 대시보드 모니터링</div>
+          <div class="stakeholder-item">분류 규칙·템플릿·서명 설정 관리</div>
+        </div>
+      </div>
+      <div class="stakeholder-card">
+        <div class="stakeholder-icon">🏢</div>
+        <div class="stakeholder-role">External User</div>
+        <div class="stakeholder-name">HR 담당자 (고객사)</div>
+        <div class="stakeholder-list">
+          <div class="stakeholder-item">교육 신청·변경·취소 이메일 발송</div>
+          <div class="stakeholder-item">회신 대기 및 처리 결과 확인</div>
+          <div class="stakeholder-item">서비스 직접 접근 없음 (간접 수혜)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div style="background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 24px;">
+      <div class="section-label" style="margin-bottom: 12px;">현재 운영 환경</div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-s);margin-bottom:6px">이메일 시스템</div>
+          <div style="font-size:14px;font-weight:700;color:var(--slate)">다우기술 그룹웨어</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-s);margin-bottom:6px">일평균 수신량</div>
+          <div style="font-size:14px;font-weight:700;color:var(--slate)">50건 이상</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-s);margin-bottom:6px">주요 이메일 유형</div>
+          <div style="font-size:14px;font-weight:700;color:var(--slate)">신청 / 변경 / 취소</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 03 성공 지표 ── -->
+  <section class="section" id="s3">
+    <div class="section-editorial">03</div>
+    <div class="section-label">Success Metrics</div>
+    <div class="section-title">성공 지표</div>
+    <div class="section-desc">현재 상태 대비 목표 수치를 정의하여 서비스 성공 기준을 명확히 합니다.</div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-card-top"></div>
+        <div class="kpi-card-body">
+          <div class="kpi-label">당일 처리율</div>
+          <div class="kpi-row">
+            <div class="kpi-current">
+              <div class="kpi-current-label">현재</div>
+              <div class="kpi-current-val">미측정</div>
+            </div>
+            <div class="kpi-arrow">→</div>
+            <div class="kpi-target">
+              <div class="kpi-target-label">목표</div>
+              <div class="kpi-target-val">90%+</div>
+            </div>
+          </div>
+          <div class="kpi-desc">당일 수신된 이메일 중 당일 처리 완료 비율</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-card-top"></div>
+        <div class="kpi-card-body">
+          <div class="kpi-label">자동 분류율</div>
+          <div class="kpi-row">
+            <div class="kpi-current">
+              <div class="kpi-current-label">현재</div>
+              <div class="kpi-current-val">0%</div>
+            </div>
+            <div class="kpi-arrow">→</div>
+            <div class="kpi-target">
+              <div class="kpi-target-label">목표</div>
+              <div class="kpi-target-val">80%+</div>
+            </div>
+          </div>
+          <div class="kpi-desc">반복 유형(신청·변경·취소) 이메일 자동 분류 성공률</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-card-top"></div>
+        <div class="kpi-card-body">
+          <div class="kpi-label">운영대표 수동 처리 건수</div>
+          <div class="kpi-row">
+            <div class="kpi-current">
+              <div class="kpi-current-label">현재</div>
+              <div class="kpi-current-val">100%</div>
+            </div>
+            <div class="kpi-arrow">→</div>
+            <div class="kpi-target">
+              <div class="kpi-target-label">목표</div>
+              <div class="kpi-target-val">50%↓</div>
+            </div>
+          </div>
+          <div class="kpi-desc">전체 이메일 중 수동 개입이 필요한 비율 50% 감소</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-card-top"></div>
+        <div class="kpi-card-body">
+          <div class="kpi-label">HR 담당자 컴플레인 건수</div>
+          <div class="kpi-row">
+            <div class="kpi-current">
+              <div class="kpi-current-label">현재</div>
+              <div class="kpi-current-val">기준값</div>
+            </div>
+            <div class="kpi-arrow">→</div>
+            <div class="kpi-target">
+              <div class="kpi-target-label">목표</div>
+              <div class="kpi-target-val">70%↓</div>
+            </div>
+          </div>
+          <div class="kpi-desc">응답 지연 관련 컴플레인 현재 대비 70% 감소</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 04 기능 명세 ── -->
+  <section class="section section-bg" id="s4">
+    <div class="section-editorial">04</div>
+    <div class="section-label">Feature Specification</div>
+    <div class="section-title">기능 명세</div>
+    <div class="section-desc">MVP 범위 내 3개 핵심 기능의 요구사항과 사용자 시나리오를 정의합니다.</div>
+
+    <!-- F1 -->
+    <div class="feature-card">
+      <div class="feature-card-head">
+        <div class="feature-big-num">F1</div>
+        <div class="feature-head-content">
+          <div class="feature-tags">
+            <span class="tag tag-must">Must Have</span>
+          </div>
+          <div class="feature-name">이메일 자동 분류</div>
+          <div class="feature-why">수신 이메일 50건 이상을 운영대표가 하나씩 열어 유형을 판단하는 현재 방식은 처리 속도를 저하시키고 누락 위험을 높입니다. 자동 분류로 판단 시간을 제거하고 즉시 처리 가능한 상태로 전달합니다.</div>
+        </div>
+      </div>
+      <div class="feature-card-body">
+        <div>
+          <div class="feature-col-title">요구사항</div>
+          <div class="req-list">
+            <div class="req-item"><div class="req-dot"></div><span>수신 이메일을 교육 신청 / 교육 변경 / 교육 취소 / 기타 4가지 유형으로 자동 분류</span></div>
+            <div class="req-item"><div class="req-dot"></div><span>제목 및 본문 키워드 기반 분류, 분류 신뢰도 수치 함께 표시</span></div>
+            <div class="req-item"><div class="req-dot"></div><span>신뢰도 70% 미만 이메일은 "검토 필요"로 별도 표시</span></div>
+            <div class="req-item"><div class="req-dot"></div><span>운영대표가 분류 결과를 드롭다운으로 수동 수정 가능</span></div>
+            <div class="req-item"><div class="req-dot"></div><span>설정 화면에서 유형별 키워드 추가·삭제 가능</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="feature-col-title">사용자 시나리오</div>
+          <div class="scenario-box">
+            <div class="scenario-step">
+              <div class="step-num">01</div>
+              <div class="step-text">운영대표가 <strong>메일 가져오기</strong> 버튼 클릭</div>
+            </div>
+            <div class="scenario-step">
+              <div class="step-num">02</div>
+              <div class="step-text">시스템이 그룹웨어에서 <strong>이메일을 수집</strong>하고 유형별로 자동 분류</div>
+            </div>
+            <div class="scenario-step">
+              <div class="step-num">03</div>
+              <div class="step-text">수신함에 유형 뱃지·신뢰도가 표시되고, <strong>검토 필요 건은 별도 탭</strong>으로 분리</div>
+            </div>
+            <div class="scenario-step">
+              <div class="step-num">04</div>
+              <div class="step-text">운영대표가 잘못 분류된 건을 <strong>드롭다운으로 수정</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- F2 -->
+    <div class="feature-card">
+      <div class="feature-card-head">
+        <div class="feature-big-num">F2</div>
+        <div class="feature-head-content">
+          <div class="feature-tags">
+            <span class="tag tag-must">Must Have</span>
+          </div>
+          <div class="feature-name">반복 유형 자동 답변</div>
+          <div class="feature-why">교육 신청·변경·취소에 대한 답변은 90% 이상이 동일한 형식입니다. 매번 수작업으로 작성하는 대신 사전 정의된 템플릿으로 즉시 발송하여 응답 시간을 단축하고 운영대표의 반복 업무를 제거합니다.</div>
+        </div>
+      </div>
+      <div class="feature-card-body">
+        <div>
+          <div class="feature-col-title">요구사항</div>
+          <div class="req-list">
+            <div class="req-item"><div class="req-dot"></div><span>교육 신청·변경·취소 유형별 답변 템플릿 사전 설정 및 자동 적용</span></div>
+            <div class="req-item"><div class="req-dot"></div><span>{{이름}}, {{교육명}} 등 변수 치환으로 개인화된 답변 생성</span></div>
+            <div class="req-item"><div class="req-dot"></div><span>발송 전 운영대표 검토 모드 / 즉시 발송 모드 선택 가능</span></div>
+            <div class="req-item"><div class="req-dot"></div><span>발송 전 미리보기 팝업에서 내용 직접 수정 가능</span></div>
+            <div class="req-item"><div class="req-dot"></div><span>자동 답변 발송 이력 로그 관리 (7일 보관)</span></div>
+            <div class="req-item"><div class="req-dot"></div><span>그룹웨어(다우기술)와 연동하여 실제 이메일 발송</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="feature-col-title">사용자 시나리오</div>
+          <div class="scenario-box">
+            <div class="scenario-step">
+              <div class="step-num">01</div>
+              <div class="step-text">분류된 이메일에서 <strong>답변 대기열로 이동</strong> 클릭</div>
+            </div>
+            <div class="scenario-step">
+              <div class="step-num">02</div>
+              <div class="step-text">유형에 맞는 <strong>템플릿이 자동 적용</strong>된 미리보기 표시</div>
+            </div>
+            <div class="scenario-step">
+              <div class="step-num">03</div>
+              <div class="step-text">운영대표가 내용 확인 후 <strong>발송 승인</strong> 또는 내용 수정</div>
+            </div>
+            <div class="scenario-step">
+              <div class="step-num">04</div>
+              <div class="step-text">그룹웨어를 통해 <strong>실제 이메일 발송</strong>, 상태 "답변완료"로 변경</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- F3 -->
+    <div class="feature-card">
+      <div class="feature-card-head">
+        <div class="feature-big-num">F3</div>
+        <div class="feature-head-content">
+          <div class="feature-tags">
+            <span class="tag tag-should">Should Have</span>
+          </div>
+          <div class="feature-name">처리 현황 대시보드</div>
+          <div class="feature-why">현재는 미처리 이메일이 몇 건인지, 어떤 유형이 많은지 파악할 방법이 없습니다. 처리 현황을 실시간으로 시각화하면 업무 우선순위 판단과 팀 성과 측정이 가능해집니다.</div>
+        </div>
+      </div>
+      <div class="feature-card-body">
+        <div>
+          <div class="feature-col-title">요구사항</div>
+          <div class="req-list">
+            <div class="req-item"><div class="req-dot"></div><span>미처리 건수, 당일 처리율, 자동 분류율, 답변 완료 건수 KPI 카드</span></div>
+            <div class="req-item"><div class="req-dot"></div><span>유형별(신청·변경·취소·기타) 수신량 바 차트</span></div>
+            <div class="req-item"><div class="req-dot"></div><span>HR 담당자별 요청 현황 집계 (상위 5명)</span></div>
+            <div class="req-item"><div class="req-dot"></div><span>주간 수신량 추이 그래프</span></div>
+            <div class="req-item"><div class="req-dot"></div><span>최근 처리 활동 피드 (답변 발송, 검토 필요 알림 등)</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="feature-col-title">사용자 시나리오</div>
+          <div class="scenario-box">
+            <div class="scenario-step">
+              <div class="step-num">01</div>
+              <div class="step-text">운영대표가 <strong>오전 업무 시작 시</strong> 대시보드 확인</div>
+            </div>
+            <div class="scenario-step">
+              <div class="step-num">02</div>
+              <div class="step-text"><strong>미처리 건수와 유형별 현황</strong>을 한눈에 파악</div>
+            </div>
+            <div class="scenario-step">
+              <div class="step-num">03</div>
+              <div class="step-text">취소 유형이 많으면 <strong>해당 탭으로 이동</strong>해 우선 처리</div>
+            </div>
+            <div class="scenario-step">
+              <div class="step-num">04</div>
+              <div class="step-text">주간 추이로 <strong>업무량 패턴 파악</strong> 및 팀 리포팅 활용</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ── 05 범위 ── -->
+  <section class="section" id="s5">
+    <div class="section-editorial">05</div>
+    <div class="section-label">Scope</div>
+    <div class="section-title">범위 정의</div>
+    <div class="section-desc">MVP 포함 범위와 제외 범위를 명확히 정의하여 개발 범위를 통제합니다.</div>
+
+    <div class="scope-grid">
+      <div class="scope-card scope-in">
+        <div class="scope-card-title">포함 (In Scope)</div>
+        <div class="scope-items">
+          <div class="scope-item">다우기술 그룹웨어 이메일 수집 및 분류</div>
+          <div class="scope-item">교육 신청·변경·취소 유형 자동 분류</div>
+          <div class="scope-item">유형별 답변 템플릿 자동 생성 및 발송</div>
+          <div class="scope-item">발송 전 운영대표 검토 기능</div>
+          <div class="scope-item">처리 현황 실시간 대시보드</div>
+          <div class="scope-item">발송 이력 로그 관리</div>
+          <div class="scope-item">분류 규칙 및 템플릿 설정 관리</div>
+        </div>
+      </div>
+      <div class="scope-card scope-out">
+        <div class="scope-card-title">제외 (Out of Scope)</div>
+        <div class="scope-items">
+          <div class="scope-item">그룹웨어 외 타 이메일 시스템 연동</div>
+          <div class="scope-item">HR 시스템(인사 DB) 직접 연동</div>
+          <div class="scope-item">챗봇·전화 채널 확장</div>
+          <div class="scope-item">다국어 처리</div>
+          <div class="scope-item">모바일 앱 개발</div>
+          <div class="scope-item">일/주/월 단위 리포트 자동 생성 (추후 검토)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// IntersectionObserver — 스크롤 시 사이드바 active 자동 업데이트
+const sections = document.querySelectorAll('section[id]');
+const navItems = document.querySelectorAll('.sb-nav-item');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.getAttribute('id');
+      navItems.forEach(item => {
+        item.classList.toggle('active', item.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, {
+  rootMargin: '-20% 0px -60% 0px',
+  threshold: 0
+});
+
+sections.forEach(s => observer.observe(s));
+</script>
 </body>
 </html>

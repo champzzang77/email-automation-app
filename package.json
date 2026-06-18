@@ -1,0 +1,33 @@
+{
+  "name": "browser_automation",
+  "version": "1.0.0",
+  "description": "Local Playwright helpers for browser-assisted workflows",
+  "main": "scripts/kis_guided_signup.js",
+  "scripts": {
+    "start": "node server.js",
+    "launch": "node launch.js",
+    "smoke": "node scripts/chrome_smoke_test.js",
+    "kis:login": "node scripts/kis_guided_signup.js --flow login",
+    "kis:apply": "node scripts/kis_guided_signup.js --flow apply",
+    "kis:apply:auto": "node scripts/kis_guided_signup.js --flow apply --auto-advance",
+    "kis:apply:autofill": "node scripts/kis_guided_signup.js --flow apply --autofill",
+    "kis:new-account": "node scripts/kis_guided_signup.js --flow new-account",
+    "kis:existing-account": "node scripts/kis_guided_signup.js --flow existing-account",
+    "confluence:login": "node scripts/confluence_slack_login.js",
+    "confluence:sync": "node scripts/confluence_sync_html_macro.js",
+    "hunet:mail:setup": "node scripts/hunet_mail_setup.js",
+    "hunet:mail:read": "node scripts/hunet_mail_read.js",
+    "hunet:mail:read:headless": "node scripts/hunet_mail_read.js --headless",
+    "hunet:mail": "node scripts/hunet_mail_v2.js",
+    "hunet:mail:headless": "node scripts/hunet_mail_v2.js --headless",
+    "hunet:mail:raw": "node scripts/hunet_mail_v2.js --save-raw"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "playwright": "^1.59.1",
+    "ws": "^8.20.1"
+  }
+}

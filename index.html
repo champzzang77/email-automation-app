@@ -1191,6 +1191,7 @@ function selectEmail(id) {
     <div class="detail-actions">
       ${e.status === '미처리' ? `
         <button class="btn btn-primary" onclick="sendToQueue(${e.id})">답변 대기열로 이동</button>
+        <button class="btn btn-ghost" onclick="draftReplyWithAI(${e.id})">🤖 AI 답장 초안</button>
         <button class="btn btn-ghost" onclick="markDone(${e.id})">처리 완료</button>
         <button class="btn btn-ghost" onclick="markReadInbox(${e.id})" id="markread-btn-${e.id}">📨 실제 메일함 읽음처리</button>
       ` : `
@@ -1215,6 +1216,43 @@ function resetStatus(id) {
   saveStatusCache(); saveReplyQueue();
   toast('미처리 상태로 되돌렸습니다');
   renderEmailList(); updateBadges(); selectEmail(id);
+}
+
+async function draftReplyWithAI(id) {
+  const e = emails.find(x => x.id === id);
+  if (!e) return;
+  const btn = document.querySelector(`button[onclick="draftReplyWithAI(${id})"]`);
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ 초안 생성 중...'; }
+  try {
+    const r = await fetch('http://localhost:3412/api/draft-reply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mail: { from: e.sender, fromEmail: e.email, subject: e.subject, body: e.body },
+        templateHint: e.type ? (TYPES[e.type]?.label || '') : '',
+        signature: true,
+      }),
+    });
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.error || '실패');
+    if (!replyQueue.some(q => q.emailId === id)) {
+      replyQueue.push({
+        id: Date.now(), emailId: id, to: e.email || e.sender, type: e.type,
+        subject: '[RE] ' + e.subject, template: e.type,
+      });
+      e.status = '답변 대기';
+      saveStatusCache(); saveReplyQueue();
+    }
+    const qi = replyQueue.find(q => q.emailId === id);
+    if (qi) qi.aiDraft = data.draft;
+    saveReplyQueue();
+    toast('AI 초안이 생성되었습니다. 답변 관리 탭에서 확인하세요.');
+    renderEmailList(); updateBadges(); selectEmail(id);
+  } catch(err) {
+    toast('AI 초안 생성 실패: ' + err.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🤖 AI 답장 초안'; }
+  }
 }
 
 function sendToQueue(id) {
@@ -1388,8 +1426,9 @@ function renderReplyBody() {
           </div>
         </div>
         <div class="queue-body">
-          <div class="template-preview">${(()=>{const body=applySignature(templates[r.template]||templates.other);return /<[a-z][\s\S]*>/i.test(body)?body:body.replace(/\n/g,'<br>');})()}</div>
-          <textarea class="template-edit" id="te-${r.id}">${applySignature(templates[r.template]||templates.other)}</textarea>
+          ${r.aiDraft ? `<div style="font-size:11px;color:var(--terra);margin-bottom:6px;font-weight:600">🤖 AI 초안 적용됨</div>` : ''}
+          <div class="template-preview">${(()=>{const body=applySignature(r.aiDraft||templates[r.template]||templates.other);return /<[a-z][\s\S]*>/i.test(body)?body:body.replace(/\n/g,'<br>');})()}</div>
+          <textarea class="template-edit" id="te-${r.id}">${applySignature(r.aiDraft||templates[r.template]||templates.other)}</textarea>
         </div>
       </div>`).join('')}</div>`;
   } else {

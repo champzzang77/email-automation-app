@@ -221,6 +221,76 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // ── POST /api/draft-reply → Claude AI로 답장 초안 생성 ───────────────────
+  if (url.pathname === '/api/draft-reply' && method === 'POST') {
+    const { mail, templateHint, signature } = await parseBody(req);
+    const { claudeApiKey } = readAppConfig();
+    if (!claudeApiKey) return res_json(res, 400, { ok: false, error: 'Claude API 키가 설정되지 않았습니다' });
+    if (!mail) return res_json(res, 400, { ok: false, error: 'mail 필수' });
+
+    try {
+      const https = require('https');
+      const sigNote = signature ? `\n\n[서명 블록은 아래에 자동 추가됩니다. 초안에는 포함하지 마세요.]` : '';
+      const hintNote = templateHint ? `\n\n답변 유형 힌트: ${templateHint}` : '';
+      const prompt = `당신은 휴넷 교육 운영팀 직원입니다. 아래 수신 메일에 대한 정중하고 명확한 답변 초안을 작성해주세요.${hintNote}${sigNote}
+
+--- 수신 메일 ---
+보낸 사람: ${mail.from || ''} <${mail.fromEmail || ''}>
+제목: ${mail.subject || ''}
+내용:
+${(mail.body || '').substring(0, 800)}
+--- 끝 ---
+
+요구사항:
+1. 인사말로 시작하고 발신자 이름이 있으면 호칭을 붙여 사용하세요.
+2. 메일 내용에 맞는 구체적인 답변을 작성하세요.
+3. 서명란은 포함하지 마세요.
+4. HTML 태그 없이 일반 텍스트로만 작성하세요.
+5. 300자 이내로 간결하게 작성하세요.
+
+답변 초안만 출력하세요:`;
+
+      const reqBody = JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 512,
+        messages: [{ role: 'user', content: prompt }],
+      });
+
+      const draft = await new Promise((resolve, reject) => {
+        const req = https.request({
+          hostname: 'api.anthropic.com',
+          path: '/v1/messages',
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': claudeApiKey,
+            'anthropic-version': '2023-06-01',
+            'Content-Length': Buffer.byteLength(reqBody),
+          },
+        }, (r) => {
+          let data = '';
+          r.on('data', c => data += c);
+          r.on('end', () => {
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.error) return reject(new Error(parsed.error.message));
+              resolve(parsed.content?.[0]?.text || '');
+            } catch(e) { reject(e); }
+          });
+        });
+        req.on('error', reject);
+        req.write(reqBody);
+        req.end();
+      });
+
+      res_json(res, 200, { ok: true, draft });
+    } catch(e) {
+      console.error('[draft-reply 오류]', e.message);
+      res_json(res, 500, { ok: false, error: e.message });
+    }
+    return;
+  }
+
   // ── POST /api/classify → Claude AI로 메일 분류 ────────────────────────────
   if (url.pathname === '/api/classify' && method === 'POST') {
     const { mails } = await parseBody(req);
